@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>es.umh-atsd</groupId>
-    <artifactId>atsd-todolist-your-full-name</artifactId>
-    <version>1.0.0</version>
+    <artifactId>atsd-todolist-alex-palacios-perez</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
