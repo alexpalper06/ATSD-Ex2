@@ -15,8 +15,10 @@ public class ManagerUserSession {
     // una autorización sencilla. En los métodos de controllers
     // comprobamos si el id del usuario logeado coincide con el obtenido
     // desde la URL
-    public void logearUsuario(Long idUsuario) {
+    public void logearUsuario(Long idUsuario, String username) {
+
         session.setAttribute("idUsuarioLogeado", idUsuario);
+        session.setAttribute("username", username);
     }
 
     public Long usuarioLogeado() {

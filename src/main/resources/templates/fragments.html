@@ -13,4 +13,57 @@
     <script th:src="@{/js/bootstrap.min.js}"></script>
 </div>
 
+<div th:fragment="navbar">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">ToDoList</a>
+
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/about}">About</a>
+                    </li>
+
+                    <li class="nav-item" th:if="${session.idUsuarioLogeado != null}">
+                        <a class="nav-link" th:href="@{/usuarios/{id}/tareas(id=${session.idUsuarioLogeado})}">Mis Tareas</a>
+                    </li>
+
+                    <li class="nav-item" th:if="${session.idUsuarioLogeado != null}">
+                        <a class="nav-link" th:href="@{/usuarios}">Lista de Usuarios</a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item" th:if="${session.idUsuarioLogeado == null}">
+                        <a class="nav-link" th:href="@{/login}">Login</a>
+                    </li>
+                    <li class="nav-item" th:if="${session.idUsuarioLogeado == null}">
+                        <a class="nav-link" th:href="@{/registro}">Registro</a>
+                    </li>
+
+                    <li class="nav-item" th:if="${session.idUsuarioLogeado != null}">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
+                               id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span th:text="${session.username}"></span>
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="#">Account</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" th:href="@{/logout}">
+                                        <span th:text="'Log out' + ${session.username}"></span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
 </html>

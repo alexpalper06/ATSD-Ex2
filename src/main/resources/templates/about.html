@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments :: head (titulo='Acerca de')"></head>
 <body>
+<div th:replace="fragments :: navbar"></div>
 <div class="container-fluid">
   <div class="container-fluid">
     <h1>ToDoList</h1>
@@ -12,6 +13,7 @@
     </ul>
   </div>
 </div>
-<div th:replace="fragments::javascript"/>
+
+<div th:replace="fragments :: javascript"></div>
 </body>
 </html>
