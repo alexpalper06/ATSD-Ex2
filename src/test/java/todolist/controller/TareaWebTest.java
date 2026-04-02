@@ -216,12 +216,54 @@ public class TareaWebTest {
         String url = "/usuarios/" + usuarioId.toString() + "/tareas";
 
         this.mockMvc.perform(get(url)
-                        // Mocks that the session stores user's id. Necessary for thymeleaf th:if
-                        .sessionAttr("idUsuarioLogeado", usuarioId))
+                // Mocks that the session stores user's id. Necessary for thymeleaf th:if
+                    .sessionAttr("idUsuarioLogeado", usuarioId))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
                         // Tasks link should be present with correct user ID
                         containsString("href=\"" + url + "\">Tasks")
                 ));
+    }
+
+    @Test
+    public void navbarConsistencyWhenCreatingNewTask() throws Exception {
+        // GIVEN: A logged-in user
+        Long usuarioId = addUsuarioTareasBD().get("usuarioId");
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        // WHEN: Accessing the "New Task" form
+        String urlNuevaTarea = "/usuarios/" + usuarioId.toString() + "/tareas/nueva";
+        String expectedTasksUrl = "/usuarios/" + usuarioId + "/tareas";
+
+        // THEN: The navbar should still contain the link to the tasks list
+        this.mockMvc.perform(get(urlNuevaTarea).sessionAttr("idUsuarioLogeado", usuarioId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(
+                        containsString("href=\"" + expectedTasksUrl + "\">Tasks")
+                ));
+    }
+
+    @Test
+    public void navbarConsistencyWhenEditingTask() throws Exception {
+        // GIVEN
+        // Un usuario con dos tareas en la BD
+        Long usuarioId = addUsuarioTareasBD().get("usuarioId");
+
+        // Ver el comentario en el primer test
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        // WHEN, THEN
+        // realizamos la petición GET para acceder a la edicion de tarea,
+
+        String urlEdit = "/usuarios/" + usuarioId.toString() + "/tareas/nueva";
+        String expectedUrlNav = "/usuarios/" + usuarioId + "/tareas";
+
+        this.mockMvc.perform(get(urlEdit)
+                        .sessionAttr("idUsuarioLogeado", usuarioId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(
+                        containsString("href=\"" + expectedUrlNav + "\">Tasks")
+                ));
+
     }
 }

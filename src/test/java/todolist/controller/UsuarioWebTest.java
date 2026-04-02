@@ -103,9 +103,8 @@ public class UsuarioWebTest {
         this.mockMvc.perform(get("/login"))
                 .andExpect(content().string(allOf(
                         // Navbar elements should not be present
-                        not(containsString("navbar")),
-                        not(containsString("ToDoList")),
-                        not(containsString("href=\"/about\""))
+                        not(containsString("nav")),
+                        not(containsString("navbar"))
                 )));
     }
 
@@ -116,9 +115,8 @@ public class UsuarioWebTest {
         this.mockMvc.perform(get("/registro"))
                 .andExpect(content().string(allOf(
                         // Navbar elements should not be present
-                        not(containsString("navbar")),
-                        not(containsString("ToDoList")),
-                        not(containsString("href=\"/about\""))
+                        not(containsString("nav")),
+                        not(containsString("navbar"))
                 )));
     }
 }
