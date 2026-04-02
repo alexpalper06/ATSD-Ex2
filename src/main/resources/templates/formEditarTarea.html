@@ -4,6 +4,7 @@
 <head th:replace="fragments :: head (titulo='Login')"></head>
 
 <body>
+<div th:replace="fragments::navbar"></div>
 <div class="container-fluid">
 
     <h2 th:text="'Modificación de la tarea ' + ${tarea.getId()}"></h2>
@@ -20,7 +21,6 @@
     </form>
 </div>
 
-<div th:replace="fragments::javascript"/>
-
+<div th:replace="fragments :: javascript"></div>
 </body>
 </html>
