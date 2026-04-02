@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='User List')"></head>
+
+<body>
+<div th:replace="fragments::navbar"></div>
+<div class="container-fluid">
+
+    <div class="row mt-3">
+        <div class="col">
+            <h2>Registered Users</h2>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
+            <div th:if="${users != null and users.size() > 0}">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}"></td>
+                        <td th:text="${user.name}"></td>
+                        <td th:text="${user.email}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pagination Controls -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/registered(page=0)}" th:if="${hasPrevious}">First</a>
+                            <span class="page-link" th:if="!${hasPrevious}">First</span>
+                        </li>
+                        <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/registered(page=${currentPage - 1})}" th:if="${hasPrevious}">Previous</a>
+                            <span class="page-link" th:if="!${hasPrevious}">Previous</span>
+                        </li>
+
+                        <li class="page-item active">
+                            <span class="page-link" th:text="${currentPage + 1} + ' of ' + ${totalPages}"></span>
+                        </li>
+
+                        <li class="page-item" th:classappend="${!hasNext} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/registered(page=${currentPage + 1})}" th:if="${hasNext}">Next</a>
+                            <span class="page-link" th:if="!${hasNext}">Next</span>
+                        </li>
+                        <li class="page-item" th:classappend="${!hasNext} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/registered(page=${totalPages - 1})}" th:if="${hasNext}">Last</a>
+                            <span class="page-link" th:if="!${hasNext}">Last</span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div th:if="${users == null or users.size() == 0}" class="alert alert-warning" role="alert">
+                <strong>No users found.</strong> There are no registered users in the system yet.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="fragments :: javascript"></div>
+</body>
+</html>
