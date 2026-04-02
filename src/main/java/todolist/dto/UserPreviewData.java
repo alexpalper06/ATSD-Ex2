@@ -6,7 +6,7 @@ import java.util.Objects;
 public class UserPreviewData {
 
     private Long id;
-    private String name;
+    private String nombre; // Variable name in spanish since Usuario model data has name in spanish
     private String email;
 
     // Default constructor
@@ -16,7 +16,7 @@ public class UserPreviewData {
     // Constructor with parameters
     public UserPreviewData(Long id, String name, String email) {
         this.id = id;
-        this.name = name;
+        this.nombre = name;
         this.email = email;
     }
 
@@ -30,12 +30,12 @@ public class UserPreviewData {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getNombre() {
+        return nombre;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 
     public String getEmail() {

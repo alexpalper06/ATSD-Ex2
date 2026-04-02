@@ -11,6 +11,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.http.HttpSession;
+
 @Controller
 public class UserListController {
 
@@ -21,7 +23,7 @@ public class UserListController {
     public String listUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            Model model) {
+            Model model, HttpSession session) {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<UserPreviewData> usersPage = usuarioService.findAllUsersPreview(pageable);

@@ -1,5 +1,7 @@
 package todolist.service;
 
+import org.apache.catalina.User;
+import org.modelmapper.TypeMap;
 import todolist.dto.UsuarioData;
 import todolist.dto.UserPreviewData;
 import todolist.model.Usuario;
@@ -76,9 +78,13 @@ public class UsuarioService {
         }
     }
 
+
+
     @Transactional(readOnly = true)
     public Page<UserPreviewData> findAllUsersPreview(Pageable pageable) {
         Page<Usuario> usuariosPage = usuarioRepository.findAll(pageable);
+
         return usuariosPage.map(usuario -> modelMapper.map(usuario, UserPreviewData.class));
     }
+
 }
