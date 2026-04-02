@@ -10,9 +10,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -93,4 +96,31 @@ public class UsuarioWebTest {
                         .param("password","000"))
                 .andExpect(content().string(containsString("Contraseña incorrecta")));
     }
+
+    @Test
+    public void navbarDoesNotAppearOnLoginPage() throws Exception {
+        // GIVEN, WHEN, THEN
+        // When accessing the login page, the navbar should not be displayed
+        this.mockMvc.perform(get("/login"))
+                .andExpect(content().string(allOf(
+                        // Navbar elements should not be present
+                        not(containsString("navbar")),
+                        not(containsString("ToDoList")),
+                        not(containsString("href=\"/about\""))
+                )));
+    }
+
+    @Test
+    public void navbarDoesNotAppearOnRegisterPage() throws Exception {
+        // GIVEN, WHEN, THEN
+        // When accessing the register page, the navbar should not be displayed
+        this.mockMvc.perform(get("/registro"))
+                .andExpect(content().string(allOf(
+                        // Navbar elements should not be present
+                        not(containsString("navbar")),
+                        not(containsString("ToDoList")),
+                        not(containsString("href=\"/about\""))
+                )));
+    }
 }
+

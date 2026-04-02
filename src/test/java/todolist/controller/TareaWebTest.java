@@ -200,4 +200,25 @@ public class TareaWebTest {
         this.mockMvc.perform(get(urlListado))
                 .andExpect(content().string(containsString("Buy coffee")));
     }
+
+    @Test
+    public void navbarIncludesTasksLinkWithCorrectUserId() throws Exception {
+        // GIVEN
+        // Un usuario logged in con tareas en la BD
+        Long usuarioId = addUsuarioTareasBD().get("usuarioId");
+
+        // Mock the logged user
+        when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
+
+        // WHEN, THEN
+        // when accessing the tasks page, the navbar should display
+        // the Tasks link with the correct user ID in the URL
+        String url = "/usuarios/" + usuarioId + "/tareas";
+
+        this.mockMvc.perform(get(url))
+                .andExpect(content().string(allOf(
+                        // Tasks link should be present with correct user ID
+                        containsString("href=\"/usuarios/" + usuarioId + "/tareas\">Tasks")
+                )));
+    }
 }
