@@ -204,7 +204,7 @@ public class TareaWebTest {
     @Test
     public void navbarIncludesTasksLinkWithCorrectUserId() throws Exception {
         // GIVEN
-        // Un usuario logged in con tareas en la BD
+        // A user is logged in with a given ID
         Long usuarioId = addUsuarioTareasBD().get("usuarioId");
 
         // Mock the logged user
@@ -213,12 +213,15 @@ public class TareaWebTest {
         // WHEN, THEN
         // when accessing the tasks page, the navbar should display
         // the Tasks link with the correct user ID in the URL
-        String url = "/usuarios/" + usuarioId + "/tareas";
+        String url = "/usuarios/" + usuarioId.toString() + "/tareas";
 
-        this.mockMvc.perform(get(url))
-                .andExpect(content().string(allOf(
+        this.mockMvc.perform(get(url)
+                        // Mocks that the session stores user's id. Necessary for thymeleaf th:if
+                        .sessionAttr("idUsuarioLogeado", usuarioId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(
                         // Tasks link should be present with correct user ID
-                        containsString("href=\"/usuarios/" + usuarioId + "/tareas\">Tasks")
-                )));
+                        containsString("href=\"" + url + "\">Tasks")
+                ));
     }
 }

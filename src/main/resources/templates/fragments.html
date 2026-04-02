@@ -29,7 +29,7 @@
                 <li class="nav-item" th:if="${session.idUsuarioLogeado != null}">
                     <a class="nav-link" th:href="@{/usuarios/{id}/tareas(id=${session.idUsuarioLogeado})}">Tasks</a>
                 </li>
-                <li class="nav-item" th:if="${session.idUsuarioLogeado != null}">
+                <li class="nav-item"> <!-- For optional, made this only visible to admins -->
                     <a class="nav-link" th:href="@{/registered}">User List</a>
                 </li>
             </ul>

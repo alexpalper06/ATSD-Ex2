@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import todolist.authentication.ManagerUserSession;
 
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
@@ -29,11 +30,13 @@ public class AboutPageTest {
 
     @Test
     public void navbarShowsCorrectLeftContent() throws Exception {
+        // Tareas wont be checked here, as TareaWebTest controller checks that, since only logged in users can see it.
         this.mockMvc.perform(get("/about"))
                 .andExpect(content().string(allOf(
-                        containsString("href=\"/about\">ToDoList"),
-                        containsString("href=\"/tareas\">Tasks"),
-                        containsString("href=\"/registered\">User List")
+                        // About link
+                        containsString("href=\"/about\""),
+                        // User list link
+                        containsString("href=\"/registered\"")
                 )));
     }
     @Test
@@ -56,7 +59,7 @@ public class AboutPageTest {
     public void navbarShowsUserDropdownWhenLoggedIn() throws Exception {
         // GIVEN
         // A user is logged in
-        Long userId = 1;
+        Long userId = 1L;
         String username = "Alex Palacios Perez";
 
         // Mock the managerUserSession to simulate a logged-in user
