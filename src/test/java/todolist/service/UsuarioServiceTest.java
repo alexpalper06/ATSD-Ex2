@@ -1,10 +1,14 @@
 package todolist.service;
 
 import todolist.dto.UsuarioData;
+import todolist.dto.UserPreviewData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.jdbc.Sql;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -152,5 +156,115 @@ public class UsuarioServiceTest {
         assertThat(usuario.getId()).isEqualTo(usuarioId);
         assertThat(usuario.getEmail()).isEqualTo("richard@umh.es");
         assertThat(usuario.getNombre()).isEqualTo("Richard Stallman");
+    }
+
+    @Test
+    public void testFindNoUser() {
+        // GIVEN
+        // No users in the database
+
+        // WHEN
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UserPreviewData> result = usuarioService.findAllUsersPreview(pageable);
+
+        // THEN
+        // The service returns an empty page, not an error
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    public void testFindSingleUser() {
+        // GIVEN
+        // A single user in the database
+        Long usuarioId = addUsuarioBD();
+
+        // WHEN
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UserPreviewData> result = usuarioService.findAllUsersPreview(pageable);
+
+        // THEN
+        // The service returns a page with that user
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+
+        UserPreviewData user = result.getContent().get(0);
+        assertThat(user.getId()).isEqualTo(usuarioId);
+        assertThat(user.getNombre()).isEqualTo("Richard Stallman");
+        assertThat(user.getEmail()).isEqualTo("richard@umh.es");
+    }
+
+    @Test
+    public void testFindAllLessThanPageLimit() {
+        // GIVEN
+        // 3 users in the database with a page size of 10
+        for (int i = 0; i < 3; i++) {
+            UsuarioData usuario = new UsuarioData();
+            usuario.setEmail("user" + i + "@example.com");
+            usuario.setNombre("User " + i);
+            usuario.setPassword("password" + i);
+            usuarioService.registrar(usuario);
+        }
+
+        // WHEN
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UserPreviewData> result = usuarioService.findAllUsersPreview(pageable);
+
+        // THEN
+        // All users are returned in a single page
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(3);
+        assertThat(result.getTotalElements()).isEqualTo(3);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+    }
+
+    @Test
+    public void testFindAllExactPageLimit() {
+        // GIVEN
+        // Exactly 10 users in the database with a page size of 10
+        for (int i = 0; i < 10; i++) {
+            UsuarioData usuario = new UsuarioData();
+            usuario.setEmail("email" + i + "@gmail.com");
+            usuario.setNombre("usu " + i);
+            usuario.setPassword("password123" + i);
+            usuarioService.registrar(usuario);
+        }
+
+        // WHEN
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UserPreviewData> result = usuarioService.findAllUsersPreview(pageable);
+
+        // THEN
+        // Exactly 10 users are returned
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(10);
+        assertThat(result.getTotalElements()).isEqualTo(10);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+    }
+
+    @Test
+    public void testFindAllExceedPageLimit() {
+        // GIVEN
+        // 15 users in the database with a page size of 10 (exceeding the limit)
+        for (int i = 0; i < 15; i++) {
+            UsuarioData usuario = new UsuarioData();
+            usuario.setEmail("usu" + i + "@gmail.com");
+            usuario.setNombre("usu" + i);
+            usuario.setPassword("passwd123" + i);
+            usuarioService.registrar(usuario);
+        }
+
+        // WHEN
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UserPreviewData> result = usuarioService.findAllUsersPreview(pageable);
+
+        // THEN
+        // Only 10 users are returned (the pagination limit)
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(10);
+        assertThat(result.getTotalElements()).isEqualTo(15);
+        assertThat(result.getTotalPages()).isEqualTo(2);
     }
 }
