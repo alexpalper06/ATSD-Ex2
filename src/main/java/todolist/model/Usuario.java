@@ -39,6 +39,12 @@ public class Usuario implements Serializable {
         this.email = email;
     }
 
+    public Usuario(String email, String nombre, String password) {
+        this.email = email;
+        this.nombre = nombre;
+        this.password = password;
+    }
+
     // Getters y setters atributos básicos
 
     public Long getId() {
