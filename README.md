@@ -143,3 +143,105 @@ this.mockMvc.perform(get("/login"))
     )));
 ```
 
+-----
+
+### User List
+
+This functionality provides a paginated user directory at **`GET /registered`** for any user. It uses a lightweight DTO (`UserPreviewData`) so only the needed fields are exposed.
+
+#### 1. DTO
+
+`UserPreviewData` contains:
+* `Long id` (Primary key of DB)
+* `String nombre` (user name)
+* `String email` (user email)
+
+This class is used in the service and controller layer to transfer user preview data to the UI.
+
+#### 2. Service Layer
+
+A method in `UsuarioService` has been added, `findAllUsersPreview(Pageable pageable)`, with `@Transactional(readOnly = true)` and which entities via `ModelMapper`. It uses the class `Page` from Spring to allow pagination:
+
+```java
+public Page<UserPreviewData> findAllUsersPreview(Pageable pageable) {
+    Page<Usuario> usuarios = usuarioRepository.findAll(pageable);
+    return usuarios.map(usuario -> modelMapper.map(usuario, UserPreviewData.class));
+}
+```
+
+#### 3. Controller Layer
+
+`UserListController` handles the request and writes pagination model attributes. Uses `page` and `size` number in order to get information by chunks. To enable pagination, pagination state must be added to the model context.
+
+```java
+@GetMapping("/registered")
+public String listUsers(@RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        Model model) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<UserPreviewData> usersPage = usuarioService.findAllUsersPreview(pageable);
+
+    model.addAttribute("users", usersPage.getContent());
+    model.addAttribute("currentPage", page);
+    model.addAttribute("totalPages", usersPage.getTotalPages());
+    model.addAttribute("totalItems", usersPage.getTotalElements());
+    model.addAttribute("hasNext", usersPage.hasNext());
+    model.addAttribute("hasPrevious", usersPage.hasPrevious());
+
+    return "listaUsuarios";
+}
+```
+
+#### 4. View (`listaUsuarios.html`)
+
+The template includes `fragments::navbar` and `fragments::head`, iterates `th:each="user : ${users}"`, and shows a warning when users are empty.
+
+```html
+<tr th:each="user : ${users}">
+    <td th:text="${user.id}"></td>
+    <td th:text="${user.nombre}"></td>
+    <td th:text="${user.email}"></td>
+</tr>
+<tr th:if="${#lists.isEmpty(users)}">
+    <td colspan="3">No users found</td>
+</tr>
+```
+
+Pagination controls use Bootstrap buttons and `th:classappend` for active/disabled states.
+
+#### Testing
+
+`UserListWebTest` validates:
+* `/registered` renders `User List` and navbar content.
+* pagination navigation delivers users 11-20 on page 2.
+* model attributes (`users`, `currentPage`, `totalPages`, `totalItems`, `hasNext`, `hasPrevious`) are present.
+
+```java
+this.mockMvc.perform(get("/registered").param("page", "1"))
+    .andExpect(status().isOk())
+    .andExpect(content().string(allOf(
+        containsString("usu11"),
+        containsString("usu20"),
+        not(containsString("usu1"))
+    )));
+```
+
+`UsuarioServiceTest` validates:
+* `testFindNoUser` empty pages are handled.
+* `testFindSingleUser` returns exactly one user DTO with correct fields.
+* `testFindAllLessThanPageLimit` returns all users when count < page size.
+* `testFindAllExactPageLimit` returns the page-sized number of users.
+* `testFindAllExceedPageLimit` applies pagination and returns only the requested page subset.
+
+```java
+Pageable pageable = PageRequest.of(0, 10);
+Page<UserPreviewData> result = usuarioService.findAllUsersPreview(pageable);
+assertThat(result).isNotNull();
+assertThat(result.getContent()).hasSize(1);
+assertThat(result.getTotalElements()).isEqualTo(1);
+UserPreviewData user = result.getContent().get(0);
+assertThat(user.getEmail()).isEqualTo("richard@umh.es");
+```
+
+
+
