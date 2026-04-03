@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='User List')"></head>
+
+<body>
+<div th:replace="fragments::navbar"></div>
+<div class="container-fluid">
+
+    <div class="row mt-3">
+        <div class="col">
+            <h2>Registered Users</h2>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
+            <div th:if="${users != null and users.size() > 0}">
+                <table class="table table-striped" style="table-layout: fixed;">
+                    <thead>
+                    <tr>
+                        <th class="col-2">ID</th>
+                        <th class="col-4">Name</th>
+                        <th class="col-6">Email</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}" class="text-truncate"></td>
+                        <td th:text="${user.nombre}" class="text-truncate"></td>
+                        <td th:text="${user.email}" class="text-truncate"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pagination Controls -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination mb-0 justify-content-center"
+                        th:with="
+                        maxVisible=5,
+                        half=2,
+                        pStart=${(currentPage - half) < 0 ? 0 : (currentPage - half)},
+                        pEnd=${(pStart + maxVisible - 1) >= totalPages ? (totalPages - 1) : (pStart + maxVisible - 1)},
+                        start=${(pEnd - maxVisible + 1) <= 0 ? 0 : (pEnd - maxVisible + 1)},
+                        end=${pEnd}">
+                        <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/registered(page=0)}" th:if="${hasPrevious}">First</a>
+                            <span class="page-link" th:if="!${hasPrevious}">First</span>
+                        </li>
+                        <li class="page-item" th:classappend="${!hasPrevious} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/registered(page=${currentPage - 1})}" th:if="${hasPrevious}">Previous</a>
+                            <span class="page-link" th:if="!${hasPrevious}">Previous</span>
+                        </li>
+
+                        <li th:each="p : ${#numbers.sequence(start, end)}"
+                            th:classappend="${p == currentPage} ? 'active' : ''"
+                            class="page-item">
+                            <a class="page-link" th:if="${p != currentPage}" th:href="@{/registered(page=${p})}" th:text="${p + 1}"></a>
+                            <span class="page-link" th:if="${p == currentPage}" th:text="${p + 1}"></span>
+                        </li>
+
+                        <li class="page-item" th:classappend="${!hasNext} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/registered(page=${currentPage + 1})}" th:if="${hasNext}">Next</a>
+                            <span class="page-link" th:if="!${hasNext}">Next</span>
+                        </li>
+                        <li class="page-item" th:classappend="${!hasNext} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/registered(page=${totalPages - 1})}" th:if="${hasNext}">Last</a>
+                            <span class="page-link" th:if="!${hasNext}">Last</span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div th:if="${users == null or users.size() == 0}" class="alert alert-warning" role="alert">
+                <strong>No users found.</strong> There are no registered users in the system yet.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="fragments :: javascript"></div>
+</body>
+</html>

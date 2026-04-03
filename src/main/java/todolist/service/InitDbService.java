@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 // Se ejecuta solo si el perfil activo es 'dev'
@@ -25,9 +27,9 @@ public class InitDbService {
     @PostConstruct
     public void initDatabase() {
         /*
-        This should never be done. The information must never be hardcoded, it should instead be stored on a safe
+        This should never be done on a real project. The information must never be hardcoded, it should instead be stored on a safe
         file, and should never be uploaded into the repository.
-         */
+        */
         Usuario usuario = new Usuario("richard@umh.es");
         usuario.setNombre("Richard Stallman");
         usuario.setPassword("1234");
@@ -47,6 +49,18 @@ public class InitDbService {
 
         Tarea taskMe = new Tarea(userMe, "Create my own username");
         tareaRepository.save(taskMe);
+
+        /* For manual pagination testing
+        *
+
+        Usuario usu;
+        for (int i = 0; i < 50; i++) {
+            usu = new Usuario("email"+i+"@gmail.com", "usu"+i, "passwd123"+i);
+            usuarioRepository.save(usu);
+        }
+
+         */
+
 
     }
 

@@ -1,12 +1,17 @@
 package todolist.service;
 
+import org.apache.catalina.User;
+import org.modelmapper.TypeMap;
 import todolist.dto.UsuarioData;
+import todolist.dto.UserPreviewData;
 import todolist.model.Usuario;
 import todolist.repository.UsuarioRepository;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,4 +77,14 @@ public class UsuarioService {
             return modelMapper.map(usuario, UsuarioData.class);
         }
     }
+
+
+
+    @Transactional(readOnly = true)
+    public Page<UserPreviewData> findAllUsersPreview(Pageable pageable) {
+        Page<Usuario> usuariosPage = usuarioRepository.findAll(pageable);
+
+        return usuariosPage.map(usuario -> modelMapper.map(usuario, UserPreviewData.class));
+    }
+
 }
