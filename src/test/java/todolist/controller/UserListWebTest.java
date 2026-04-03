@@ -98,10 +98,10 @@ public class UserListWebTest {
         this.mockMvc.perform(get("/registered").param("page", "1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(allOf(
-                        containsString("usu11"),
-                        containsString("usu20"),
-                        not(containsString("usu1")),
-                        not(containsString("usu10"))
+                        containsString("<td class=\"text-truncate\">usu11</td>"),
+                        containsString("<td class=\"text-truncate\">usu20</td>"),
+                        not(containsString("<td class=\"text-truncate\">1</td>")),
+                        not(containsString("<td class=\"text-truncate\">10</td>"))
                 )));
     }
 
