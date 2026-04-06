@@ -3,6 +3,7 @@ package todolist.service;
 import org.apache.catalina.User;
 import org.modelmapper.TypeMap;
 import todolist.dto.UsuarioData;
+import todolist.dto.UserDetailData;
 import todolist.dto.UserPreviewData;
 import todolist.model.Usuario;
 import todolist.repository.UsuarioRepository;
@@ -75,6 +76,15 @@ public class UsuarioService {
         if (usuario == null) return null;
         else {
             return modelMapper.map(usuario, UsuarioData.class);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public UserDetailData findDetailsById(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
+        if (usuario == null) return null;
+        else {
+            return modelMapper.map(usuario, UserDetailData.class);
         }
     }
 
