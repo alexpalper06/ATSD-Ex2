@@ -2,6 +2,7 @@ package todolist.controller;
 
 import todolist.authentication.ManagerUserSession;
 import todolist.dto.UsuarioData;
+import todolist.dto.UserDetailData;
 import todolist.dto.UserPreviewData;
 import todolist.service.UsuarioService;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
@@ -142,6 +144,79 @@ public class UserListWebTest {
                         containsString("bob@example.com"),
                         containsString("Charlie"),
                         containsString("charlie@example.com")
+                )));
+    }
+
+    @Test
+    public void testViewUserDetailsFound() throws Exception {
+        // GIVEN
+        // A user detail data exists
+        UserDetailData userDetails = new UserDetailData();
+        userDetails.setId(1L);
+        userDetails.setNombre("John Doe");
+        userDetails.setEmail("john@example.com");
+        userDetails.setFechaNacimiento(new Date());
+
+        when(usuarioService.findDetailsById(1L)).thenReturn(userDetails);
+
+        // WHEN
+        // We make a GET request to /registered/1
+
+        // THEN
+        // The user details are correctly displayed
+        this.mockMvc.perform(get("/registered/1"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attribute("user", userDetails))
+                .andExpect(content().string(allOf(
+                        containsString("John Doe"),
+                        containsString("john@example.com"),
+                        containsString("User Details")
+                )));
+    }
+
+    @Test
+    public void testViewUserDetailsNotFound() throws Exception {
+        // GIVEN
+        // No user exists with id 999
+        when(usuarioService.findDetailsById(999L)).thenReturn(null);
+
+        // WHEN
+        // We make a GET request to /registered/999
+
+        // THEN
+        // The view shows a not found message
+        this.mockMvc.perform(get("/registered/999"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attribute("user", nullValue()))
+                .andExpect(content().string(containsString("User not found")));
+    }
+
+    @Test
+    public void testUserListLinksToDetail() throws Exception {
+        // GIVEN
+        // The service returns users with links
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+
+        List<UserPreviewData> users = Arrays.asList(
+                new UserPreviewData(1L, "Alice", "alice@example.com"),
+                new UserPreviewData(2L, "Bob", "bob@example.com")
+        );
+
+        Page<UserPreviewData> page = new PageImpl<>(users, PageRequest.of(0, 10), 2);
+        when(usuarioService.findAllUsersPreview(any())).thenReturn(page);
+
+        // WHEN
+        // We make a GET request to /registered
+
+        // THEN
+        // The user names are linked to /registered/{id}
+        this.mockMvc.perform(get("/registered"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        containsString("/registered/1"),
+                        containsString("/registered/2")
                 )));
     }
 }
