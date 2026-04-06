@@ -169,6 +169,7 @@ public class UserListWebTest {
                 .andExpect(model().attributeExists("user"))
                 .andExpect(model().attribute("user", userDetails))
                 .andExpect(content().string(allOf(
+                        containsString("1"),
                         containsString("John Doe"),
                         containsString("john@example.com"),
                         containsString("User Details")
@@ -188,7 +189,6 @@ public class UserListWebTest {
         // The view shows a not found message
         this.mockMvc.perform(get("/registered/999"))
                 .andExpect(status().isOk())
-                .andExpect(model().attributeExists("user"))
                 .andExpect(model().attribute("user", nullValue()))
                 .andExpect(content().string(containsString("User not found")));
     }
