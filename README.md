@@ -28,8 +28,18 @@ $ ./mvn package
 $ java -jar target/todolist-inicial-0.0.1-SNAPSHOT.jar 
 ```
 
-Access the app at: [http://localhost:8080/login](https://www.google.com/search?q=http://localhost:8080/login)
+### Links
 
+You may access the source code and an image for running the application on:
+* [GitHub](https://github.com/alexpalper06/ATSD-Ex2)
+* [DockerHub](https://hub.docker.com/r/alexpalper06/p2-todolist)
+
+Use the following links to access the main functionalities of the app:
+* Access the login at [http://localhost:8080/login](http://localhost:8080/login)
+* Register an account at [http://localhost:8080/registro](http://localhost:8080/registro)
+* Check information about the application at [http://localhost:8080/about](http://localhost:8080/about)
+* Check list of users at [http://localhost:8080/registered](http://localhost:8080/registered)
+* **Login required**. Check your tasks at [http://localhost:8080/usuarios/{id}/tareas](http://localhost:8080/usuarios/{id}/tareas)
 -----
 
 ## Implemented Functionalities
@@ -241,6 +251,139 @@ assertThat(result.getContent()).hasSize(1);
 assertThat(result.getTotalElements()).isEqualTo(1);
 UserPreviewData user = result.getContent().get(0);
 assertThat(user.getEmail()).isEqualTo("richard@umh.es");
+```
+
+-----
+
+### User Description
+
+This functionality allows users to view the complete profile of a registered account through a detail page accessible from the User List. It uses a specialized DTO (`UserDetailData`) to expose only the necessary information.
+
+#### 1. DTO
+
+`UserDetailData` contains:
+* `Long id` (Primary key of DB)
+* `String nombre` (user full name)
+* `String email` (user email)
+* `Date fechaNacimiento` (date of birth)
+
+#### 2. Service Layer
+
+A method in `UsuarioService` has been added, `findDetailsById(Long usuarioId)`, for retrieving the user information and mapping it to `UserDetailData` via `ModelMapper`:
+
+```java
+@Transactional(readOnly = true)
+public UserDetailData findDetailsById(Long usuarioId) {
+    Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
+    if (usuario == null) return null;
+    else {
+        return modelMapper.map(usuario, UserDetailData.class);
+    }
+}
+```
+
+#### 3. Controller Layer
+
+`UserListController` handles the detail page request at **`GET /registered/{id}`**. The controller extracts the user ID from the path variable, calls the service to fetch the DTO, and adds it to the model:
+
+```java
+@GetMapping("/registered/{id}")
+public String viewUserDetails(@PathVariable Long id, Model model) {
+    UserDetailData user = usuarioService.findDetailsById(id);
+    model.addAttribute("user", user);
+    return "detalleUsuario";
+}
+```
+
+#### 4. View (`detalleUsuario.html`)
+
+The template includes `fragments::navbar` and `fragments::head`, displays user details in a Bootstrap card layout, and provides error handling for non-existent users:
+
+```html
+<div th:if="${user != null}">
+    <div class="card">
+        <div class="card-body">
+            <div class="list-group list-group-flush">
+                <div class="list-group-item">
+                    <strong>Id:</strong>
+                    <span th:text="${user.id}"></span>
+                </div>
+                <div class="list-group-item">
+                    <strong>Full Name:</strong>
+                    <span th:text="${user.nombre}"></span>
+                </div>
+                <div class="list-group-item">
+                    <strong>Email:</strong>
+                    <span th:text="${user.email}"></span>
+                </div>
+                <div class="list-group-item">
+                    <strong>Date of Birth:</strong>
+                    <span th:text="${#dates.format(user.fechaNacimiento, 'dd/MM/yyyy')}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a class="btn btn-primary" th:href="@{/registered}">Back to List</a>
+</div>
+
+<div th:if="${user == null}" class="alert alert-danger" role="alert">
+    <strong>User not found.</strong> The requested user does not exist in the system.
+</div>
+```
+
+To allow the user navigate to a specific user's profile, the User List page (`listaUsuarios.html`) was updated to link user names to the detail page:
+
+```html
+<td class="text-truncate">
+    <a th:href="@{/registered/{id}(id=${user.id})}" th:text="${user.nombre}"></a>
+</td>
+```
+
+#### Testing
+
+`UserListWebTest` validates:
+* `/registered/1` renders user details correctly when user exists.
+* `/registered/999` shows error message when user does not exist.
+* Model attribute `user` is present and populated correctly.
+* Links in the User List page navigate to `/registered/{id}` endpoints.
+
+```java
+@Test
+public void testViewUserDetailsFound() throws Exception {
+    UserDetailData userDetails = new UserDetailData();
+    userDetails.setId(1L);
+    userDetails.setNombre("John Doe");
+    userDetails.setEmail("john@example.com");
+
+    when(usuarioService.findDetailsById(1L)).thenReturn(userDetails);
+
+    this.mockMvc.perform(get("/registered/1"))
+        .andExpect(status().isOk())
+        .andExpect(model().attributeExists("user"))
+        .andExpect(content().string(allOf(
+            containsString("John Doe"),
+            containsString("john@example.com")
+        )));
+}
+```
+
+`UsuarioServiceTest` validates:
+* `testFindDetailsById` returns the complete user detail when user exists.
+* `testFindDetailsByIdUserNotFound` returns null when user does not exist.
+* All fields (`id`, `nombre`, `email`, `fechaNacimiento`) are correctly mapped from the entity.
+
+```java
+@Test
+public void testFindDetailsById() {
+    Long usuarioId = addUsuarioBD();
+
+    UserDetailData usuarioDetalle = usuarioService.findDetailsById(usuarioId);
+
+    assertThat(usuarioDetalle).isNotNull();
+    assertThat(usuarioDetalle.getId()).isEqualTo(usuarioId);
+    assertThat(usuarioDetalle.getNombre()).isEqualTo("Richard Stallman");
+    assertThat(usuarioDetalle.getEmail()).isEqualTo("richard@umh.es");
+}
 ```
 
 

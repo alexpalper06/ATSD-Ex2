@@ -22,6 +22,7 @@
                         <th class="col-2">ID</th>
                         <th class="col-4">Name</th>
                         <th class="col-6">Email</th>
+                        <th class="col-2">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -29,6 +30,9 @@
                         <td th:text="${user.id}" class="text-truncate"></td>
                         <td th:text="${user.nombre}" class="text-truncate"></td>
                         <td th:text="${user.email}" class="text-truncate"></td>
+                        <td>
+                            <a th:href="@{/registered/{id}(id=${user.id})}" class="btn btn-primary btn-sm">View Details</a>
+                        </td>
                     </tr>
                     </tbody>
                 </table>

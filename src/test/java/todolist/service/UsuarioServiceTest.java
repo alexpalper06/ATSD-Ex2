@@ -1,6 +1,7 @@
 package todolist.service;
 
 import todolist.dto.UsuarioData;
+import todolist.dto.UserDetailData;
 import todolist.dto.UserPreviewData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -267,4 +268,35 @@ public class UsuarioServiceTest {
         assertThat(result.getTotalElements()).isEqualTo(15);
         assertThat(result.getTotalPages()).isEqualTo(2);
     }
+
+    @Test
+    public void testFindDetailsById() {
+        // GIVEN
+        // A user in the database
+        Long usuarioId = addUsuarioBD();
+
+        // WHEN
+        UserDetailData usuarioDetalle = usuarioService.findDetailsById(usuarioId);
+
+        // THEN
+        // The service returns the user detail correctly
+        assertThat(usuarioDetalle).isNotNull();
+        assertThat(usuarioDetalle.getId()).isEqualTo(usuarioId);
+        assertThat(usuarioDetalle.getNombre()).isEqualTo("Richard Stallman");
+        assertThat(usuarioDetalle.getEmail()).isEqualTo("richard@umh.es");
+        assertThat(usuarioDetalle.getFechaNacimiento()).isNull();
+    }
+
+    @Test
+    public void testFindDetailsByIdUserNotFound() {
+        // WHEN
+        // We search for a user that doesn't exist
+        UserDetailData usuarioDetalle = usuarioService.findDetailsById(999L);
+
+        // THEN
+        // The service returns null
+        assertThat(usuarioDetalle).isNull();
+    }
+
+   
 }
