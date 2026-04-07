@@ -28,8 +28,18 @@ $ ./mvn package
 $ java -jar target/todolist-inicial-0.0.1-SNAPSHOT.jar 
 ```
 
-Access the app at: [http://localhost:8080/login](https://www.google.com/search?q=http://localhost:8080/login)
+### Links
 
+You may access the source code and an image for running the application on:
+* [GitHub](https://github.com/alexpalper06/ATSD-Ex2)
+* [DockerHub](https://hub.docker.com/r/alexpalper06/p2-todolist)
+
+Use the following links to access the main functionalities of the app:
+* Access the login at [http://localhost:8080/login](http://localhost:8080/login)
+* Register an account at [http://localhost:8080/registro](http://localhost:8080/registro)
+* Check information about the application at [http://localhost:8080/about](http://localhost:8080/about)
+* Check list of users at [http://localhost:8080/registered](http://localhost:8080/registered)
+* **Login required**. Check your tasks at [http://localhost:8080/usuarios/{id}/tareas](http://localhost:8080/usuarios/{id}/tareas)
 -----
 
 ## Implemented Functionalities
