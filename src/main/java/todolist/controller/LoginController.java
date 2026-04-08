@@ -1,5 +1,6 @@
 package todolist.controller;
 
+import org.springframework.lang.NonNull;
 import todolist.authentication.ManagerUserSession;
 import todolist.dto.LoginData;
 import todolist.dto.RegistroData;
@@ -41,10 +42,15 @@ public class LoginController {
     public String loginSubmit(@ModelAttribute LoginData loginData, Model model, HttpSession session) {
 
         // Llamada al servicio para comprobar si el login es correcto
-        UsuarioService.LoginStatus loginStatus = usuarioService.login(loginData.geteMail(), loginData.getPassword());
+        return performLogin(loginData.geteMail(), loginData.getPassword(), model);
+    }
+
+    @NonNull
+    private String performLogin(String email, String password, Model model) {
+        UsuarioService.LoginStatus loginStatus = usuarioService.login(email, password);
 
         if (loginStatus == UsuarioService.LoginStatus.LOGIN_OK) {
-            UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
+            UsuarioData usuario = usuarioService.findByEmail(email);
 
             managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre(), usuario.getRol());
 
@@ -90,8 +96,8 @@ public class LoginController {
         usuario.setFechaNacimiento(registroData.getFechaNacimiento());
         usuario.setNombre(registroData.getNombre());
 
-        // Set rol to ADMIN if checkbox is selected and no admin exists
-        if (registroData.getIsAdmin()) {
+        // Set rol to ADMIN if checkbox is selected
+        if (registroData.isAdmin()) {
             usuario.setRol(UsuarioRol.ADMIN);
         } else {
             usuario.setRol(UsuarioRol.USER);
@@ -100,10 +106,7 @@ public class LoginController {
         usuarioService.registrar(usuario);
 
         // Redirect to /registered if admin, otherwise to login
-        if (usuario.getRol() == UsuarioRol.ADMIN) {
-            return "redirect:/registered";
-        }
-        return "redirect:/login";
+        return performLogin(usuario.getEmail(), usuario.getPassword(), model);
    }
 
    @GetMapping("/logout")
