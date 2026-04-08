@@ -3,6 +3,7 @@ package todolist.controller;
 import todolist.authentication.ManagerUserSession;
 import todolist.dto.TareaData;
 import todolist.dto.UsuarioData;
+import todolist.model.UsuarioRol;
 import todolist.service.TareaService;
 import todolist.service.UsuarioService;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,7 @@ public class TareaWebTest {
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("richard@umh.es");
         usuario.setPassword("1234");
+        usuario.setRol(UsuarioRol.USER);
         usuario = usuarioService.registrar(usuario);
 
         // Y añadimos dos tareas asociadas a ese usuario

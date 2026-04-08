@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
+import todolist.model.UsuarioRol;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +34,7 @@ public class TareaServiceTest {
     Map<String, Long> addUsuarioTareasBD() {
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("richard@umh.es");
+        usuario.setRol(UsuarioRol.USER);
         usuario.setPassword("1234");
 
         // Añadimos un usuario a la base de datos

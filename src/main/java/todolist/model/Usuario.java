@@ -1,5 +1,7 @@
 package todolist.model;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -102,6 +104,12 @@ public class Usuario implements Serializable {
 
     public Set<Tarea> getTareas() {
         return tareas;
+    }
+
+    // Method to ensure default rol if its null
+    @PrePersist
+    private void ensureRol() {
+        if (rol == null) rol = UsuarioRol.USER;
     }
 
     // Método helper para añadir una tarea a la lista y establecer la relación inversa

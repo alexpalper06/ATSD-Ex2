@@ -28,6 +28,7 @@ public class UsuarioServiceTest {
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("richard@umh.es");
         usuario.setNombre("Richard Stallman");
+        usuario.setRol(UsuarioRol.USER);
         usuario.setPassword("1234");
         UsuarioData nuevoUsuario = usuarioService.registrar(usuario);
         return nuevoUsuario.getId();
