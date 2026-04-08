@@ -48,7 +48,7 @@ public class LoginController {
 
             managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre(), usuario.getRol());
 
-            if (usuario.getRol() != null && usuario.getRol() == UsuarioRol.ADMIN) {
+            if (usuario.getRol() == UsuarioRol.ADMIN) {
                 return "redirect:/registered";
             }
             return "redirect:/usuarios/" + usuario.getId() + "/tareas";
@@ -91,7 +91,7 @@ public class LoginController {
         usuario.setNombre(registroData.getNombre());
 
         // Set rol to ADMIN if checkbox is selected and no admin exists
-        if (registroData.isAdmin() && !usuarioService.adminExists()) {
+        if (registroData.isAdmin()) {
             usuario.setRol(UsuarioRol.ADMIN);
         } else {
             usuario.setRol(UsuarioRol.USER);
