@@ -4,6 +4,7 @@ import todolist.authentication.ManagerUserSession;
 import todolist.dto.LoginData;
 import todolist.dto.RegistroData;
 import todolist.dto.UsuarioData;
+import todolist.model.UsuarioRol;
 import todolist.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -45,8 +46,11 @@ public class LoginController {
         if (loginStatus == UsuarioService.LoginStatus.LOGIN_OK) {
             UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
 
-            managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre());
+            managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre(), usuario.getRol());
 
+            if (usuario.getRol() != null && usuario.getRol() == UsuarioRol.ADMIN) {
+                return "redirect:/registered";
+            }
             return "redirect:/usuarios/" + usuario.getId() + "/tareas";
         } else if (loginStatus == UsuarioService.LoginStatus.USER_NOT_FOUND) {
             model.addAttribute("error", "No existe usuario");
@@ -61,6 +65,7 @@ public class LoginController {
     @GetMapping("/registro")
     public String registroForm(Model model) {
         model.addAttribute("registroData", new RegistroData());
+        model.addAttribute("adminExists", usuarioService.adminExists());
         return "formRegistro";
     }
 
@@ -68,12 +73,14 @@ public class LoginController {
    public String registroSubmit(@Valid RegistroData registroData, BindingResult result, Model model) {
 
         if (result.hasErrors()) {
+            model.addAttribute("adminExists", usuarioService.adminExists());
             return "formRegistro";
         }
 
         if (usuarioService.findByEmail(registroData.getEmail()) != null) {
             model.addAttribute("registroData", registroData);
             model.addAttribute("error", "El usuario " + registroData.getEmail() + " ya existe");
+            model.addAttribute("adminExists", usuarioService.adminExists());
             return "formRegistro";
         }
 
@@ -83,7 +90,19 @@ public class LoginController {
         usuario.setFechaNacimiento(registroData.getFechaNacimiento());
         usuario.setNombre(registroData.getNombre());
 
+        // Set rol to ADMIN if checkbox is selected and no admin exists
+        if (registroData.isAdmin() && !usuarioService.adminExists()) {
+            usuario.setRol(UsuarioRol.ADMIN);
+        } else {
+            usuario.setRol(UsuarioRol.USER);
+        }
+
         usuarioService.registrar(usuario);
+
+        // Redirect to /registered if admin, otherwise to login
+        if (usuario.getRol() == UsuarioRol.ADMIN) {
+            return "redirect:/registered";
+        }
         return "redirect:/login";
    }
 
