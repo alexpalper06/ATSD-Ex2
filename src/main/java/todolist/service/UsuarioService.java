@@ -6,6 +6,7 @@ import todolist.dto.UsuarioData;
 import todolist.dto.UserDetailData;
 import todolist.dto.UserPreviewData;
 import todolist.model.Usuario;
+import todolist.model.UsuarioRol;
 import todolist.repository.UsuarioRepository;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -42,6 +43,11 @@ public class UsuarioService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public boolean adminExists() {
+        return usuarioRepository.existsByRol(UsuarioRol.ADMIN);
+    }
+
     // Se añade un usuario en la aplicación.
     // El email y password del usuario deben ser distinto de null
     // El email no debe estar registrado en la base de datos
@@ -54,6 +60,8 @@ public class UsuarioService {
             throw new UsuarioServiceException("El usuario no tiene email");
         else if (usuario.getPassword() == null)
             throw new UsuarioServiceException("El usuario no tiene password");
+        else if (usuario.getRol() == UsuarioRol.ADMIN && adminExists())
+            throw new UsuarioServiceException("Ya existe un administrador en el sistema");
         else {
             Usuario usuarioNuevo = modelMapper.map(usuario, Usuario.class);
             usuarioNuevo = usuarioRepository.save(usuarioNuevo);
