@@ -157,7 +157,7 @@ public class UsuarioWebTest {
         adminUser.setNombre("Admin User");
         adminUser.setId(1L);
         adminUser.setEmail("admin@gmail.com");
-        adminUser.setRol(todolist.model.UsuarioRol.ADMIN);
+        adminUser.setRol(UsuarioRol.ADMIN);
 
         when(usuarioService.adminExists()).thenReturn(false);
         when(usuarioService.findByEmail("admin@gmail.com")).thenReturn(null);
@@ -183,7 +183,7 @@ public class UsuarioWebTest {
         usuario.setNombre("Regular User");
         usuario.setId(2L);
         usuario.setEmail("user@gmail.com");
-        usuario.setRol(todolist.model.UsuarioRol.USER);
+        usuario.setRol(UsuarioRol.USER);
 
         when(usuarioService.adminExists()).thenReturn(true);
         when(usuarioService.findByEmail("user@gmail.com")).thenReturn(null);
@@ -211,7 +211,7 @@ public class UsuarioWebTest {
         UsuarioData adminUser = new UsuarioData();
         adminUser.setNombre("Admin User");
         adminUser.setId(1L);
-        adminUser.setRol(todolist.model.UsuarioRol.ADMIN);
+        adminUser.setRol(UsuarioRol.ADMIN);
 
         when(usuarioService.login("admin@gmail.com", "12345678"))
                 .thenReturn(UsuarioService.LoginStatus.LOGIN_OK);

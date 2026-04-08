@@ -91,7 +91,7 @@ public class LoginController {
         usuario.setNombre(registroData.getNombre());
 
         // Set rol to ADMIN if checkbox is selected and no admin exists
-        if (registroData.isAdmin()) {
+        if (registroData.getIsAdmin()) {
             usuario.setRol(UsuarioRol.ADMIN);
         } else {
             usuario.setRol(UsuarioRol.USER);
