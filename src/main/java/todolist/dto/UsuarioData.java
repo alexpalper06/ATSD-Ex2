@@ -1,5 +1,6 @@
 package todolist.dto;
 
+import todolist.model.UsuarioRol;
 import java.util.Date;
 import java.util.Objects;
 
@@ -11,6 +12,7 @@ public class UsuarioData {
     private String nombre;
     private String password;
     private Date fechaNacimiento;
+    private UsuarioRol rol;
 
     // Getters y setters
 
@@ -48,6 +50,14 @@ public class UsuarioData {
 
     public void setFechaNacimiento(Date fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public UsuarioRol getRol() {
+        return rol;
+    }
+
+    public void setRol(UsuarioRol rol) {
+        this.rol = rol;
     }
 
     // Sobreescribimos equals y hashCode para que dos usuarios sean iguales
