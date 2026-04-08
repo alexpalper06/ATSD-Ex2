@@ -157,6 +157,7 @@ public class UsuarioWebTest {
         adminUser.setNombre("Admin User");
         adminUser.setId(1L);
         adminUser.setEmail("admin@gmail.com");
+        adminUser.setPassword("12345678");
         adminUser.setRol(UsuarioRol.ADMIN);
 
         when(usuarioService.adminExists()).thenReturn(false);
@@ -183,6 +184,7 @@ public class UsuarioWebTest {
         usuario.setNombre("Regular User");
         usuario.setId(2L);
         usuario.setEmail("user@gmail.com");
+        usuario.setPassword("12345678");
         usuario.setRol(UsuarioRol.USER);
 
         when(usuarioService.adminExists()).thenReturn(true);
@@ -198,7 +200,7 @@ public class UsuarioWebTest {
                         .param("nombre", "Regular User")
                         .param("isAdmin", "false"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/usuarios/2/tareas"));
     }
 
     @Test

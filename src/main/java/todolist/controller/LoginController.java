@@ -49,6 +49,10 @@ public class LoginController {
     private String performLogin(String email, String password, Model model) {
         UsuarioService.LoginStatus loginStatus = usuarioService.login(email, password);
 
+        if (loginStatus != UsuarioService.LoginStatus.LOGIN_OK) {
+            model.addAttribute("loginData", new LoginData(email, password));
+        }
+
         if (loginStatus == UsuarioService.LoginStatus.LOGIN_OK) {
             UsuarioData usuario = usuarioService.findByEmail(email);
 
