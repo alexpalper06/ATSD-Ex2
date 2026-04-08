@@ -8,7 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-
+import todolist.model.UsuarioRol;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -44,6 +44,7 @@ public class UsuarioWebTest {
         UsuarioData anaGarcia = new UsuarioData();
         anaGarcia.setNombre("Ana García");
         anaGarcia.setId(1L);
+        anaGarcia.setRol(UsuarioRol.USER);
 
         when(usuarioService.login("ana.garcia@gmail.com", "12345678"))
                 .thenReturn(UsuarioService.LoginStatus.LOGIN_OK);
@@ -118,6 +119,113 @@ public class UsuarioWebTest {
                         not(containsString("nav")),
                         not(containsString("navbar"))
                 )));
+    }
+
+    @Test
+    public void adminCheckboxVisibleWhenNoAdminExists() throws Exception {
+        // GIVEN
+        // No admin exists in the system
+        when(usuarioService.adminExists()).thenReturn(false);
+
+        // WHEN
+        // User accesses the registration page
+        // THEN
+        // The admin checkbox should be visible
+        this.mockMvc.perform(get("/registro"))
+                .andExpect(content().string(containsString("Registrar como administrador")));
+    }
+
+    @Test
+    public void adminCheckboxHiddenWhenAdminExists() throws Exception {
+        // GIVEN
+        // An admin exists in the system
+        when(usuarioService.adminExists()).thenReturn(true);
+
+        // WHEN
+        // User accesses the registration page
+        // THEN
+        // The admin checkbox should not be visible
+        this.mockMvc.perform(get("/registro"))
+                .andExpect(content().string(not(containsString("Registrar como administrador"))));
+    }
+
+    @Test
+    public void testAdminRegisterRedirect() throws Exception {
+        // GIVEN
+        // No admin exists and we register an admin user
+        UsuarioData adminUser = new UsuarioData();
+        adminUser.setNombre("Admin User");
+        adminUser.setId(1L);
+        adminUser.setEmail("admin@gmail.com");
+        adminUser.setRol(todolist.model.UsuarioRol.ADMIN);
+
+        when(usuarioService.adminExists()).thenReturn(false);
+        when(usuarioService.findByEmail("admin@gmail.com")).thenReturn(null);
+        when(usuarioService.registrar(org.mockito.ArgumentMatchers.any(UsuarioData.class)))
+                .thenReturn(adminUser);
+
+        // WHEN, THEN
+        // Registering an admin should redirect to /registered
+        this.mockMvc.perform(post("/registro")
+                        .param("eMail", "admin@gmail.com")
+                        .param("password", "12345678")
+                        .param("nombre", "Admin User")
+                        .param("isAdmin", "true"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/registered"));
+    }
+
+    @Test
+    public void testUserRegisterRedirect() throws Exception {
+        // GIVEN
+        // Registering a regular user (not admin)
+        UsuarioData usuario = new UsuarioData();
+        usuario.setNombre("Regular User");
+        usuario.setId(2L);
+        usuario.setEmail("user@gmail.com");
+        usuario.setRol(todolist.model.UsuarioRol.USER);
+
+        when(usuarioService.adminExists()).thenReturn(true);
+        when(usuarioService.findByEmail("user@gmail.com")).thenReturn(null);
+        when(usuarioService.registrar(org.mockito.ArgumentMatchers.any(UsuarioData.class)))
+                .thenReturn(usuario);
+
+        // WHEN, THEN
+        // Registering a regular user should redirect to /login
+        this.mockMvc.perform(post("/registro")
+                        .param("eMail", "user@gmail.com")
+                        .param("password", "12345678")
+                        .param("nombre", "Regular User")
+                        .param("isAdmin", "false"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    public void testAdminLoginRedirect() throws Exception {
+        // GIVEN
+        // Moqueamos la llamada a usuarioService.login para que
+        // devuelva un LOGIN_OK y la llamada a usuarioService.findByEmail
+        // para que devuelva un admin usuario
+
+        UsuarioData adminUser = new UsuarioData();
+        adminUser.setNombre("Admin User");
+        adminUser.setId(1L);
+        adminUser.setRol(todolist.model.UsuarioRol.ADMIN);
+
+        when(usuarioService.login("admin@gmail.com", "12345678"))
+                .thenReturn(UsuarioService.LoginStatus.LOGIN_OK);
+        when(usuarioService.findByEmail("admin@gmail.com"))
+                .thenReturn(adminUser);
+
+        // WHEN, THEN
+        // Logging in as admin should redirect to /registered
+
+        this.mockMvc.perform(post("/login")
+                        .param("eMail", "admin@gmail.com")
+                        .param("password", "12345678"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/registered"));
     }
 }
 
