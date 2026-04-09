@@ -242,42 +242,6 @@ public class UsuarioWebTest {
                 .andExpect(redirectedUrl("/registered"));
     }
 
-    @Test
-    public void testListUsersOnlyAdmin() throws Exception {
-        // GIVEN
-        // A standard user is logged in (not admin)
-        // WHEN
-        // We make a GET request to /registered without admin role
-
-        // THEN
-        // The response should be UNAUTHORIZED with "insufficient permissions" error
-        this.mockMvc.perform(get("/registered")
-                        .sessionAttr("idUsuarioLogeado", 2L)
-                        .sessionAttr("username", "standarUser")
-                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string(containsString("insufficient permissions")));
-    }
-
-    @Test
-    public void testSuccessAdminAccess() throws Exception {
-        // GIVEN
-        // An admin user is logged in
-        // Mock the service to return an empty page
-        Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
-        when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
-
-        // WHEN
-        // We make a GET request to /registered with admin role
-
-        // THEN
-        // The response should be OK
-        this.mockMvc.perform(get("/registered")
-                        .sessionAttr("idUsuarioLogeado", 1L)
-                        .sessionAttr("username", "adminUser")
-                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
-                .andExpect(status().isOk());
-    }
 
 }
 

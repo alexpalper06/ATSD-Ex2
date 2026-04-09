@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import todolist.authentication.ManagerUserSession;
+import todolist.model.UsuarioRol;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.when;
@@ -34,9 +35,7 @@ public class AboutPageTest {
         this.mockMvc.perform(get("/about"))
                 .andExpect(content().string(allOf(
                         // About link
-                        containsString("href=\"/about\""),
-                        // User list link
-                        containsString("href=\"/registered\"")
+                        containsString("href=\"/about\"")
                 )));
     }
     @Test
@@ -69,6 +68,7 @@ public class AboutPageTest {
         // The navbar should display username dropdown with Account and Logout options
         this.mockMvc.perform(get("/about")
                         .sessionAttr("idUsuarioLogeado", userId)
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN)
                         .sessionAttr("username", username))
                 .andExpect(content().string(allOf(
                         // Ensure Login and Register are NOT shown

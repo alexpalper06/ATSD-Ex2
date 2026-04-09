@@ -1,7 +1,6 @@
 package todolist.controller;
 
 import todolist.authentication.ManagerUserSession;
-import todolist.dto.UsuarioData;
 import todolist.dto.UserDetailData;
 import todolist.dto.UserPreviewData;
 import todolist.service.UsuarioService;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
