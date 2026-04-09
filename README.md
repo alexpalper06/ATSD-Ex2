@@ -26,11 +26,11 @@ $ java -jar target/todolist-inicial-0.0.1-SNAPSHOT.jar
 
 ### Links
 
-You may access the source code and an image for running the application on:
+You may access the source code and a packaged runnable version as a docker image on:
 * [GitHub](https://github.com/alexpalper06/ATSD-Ex2)
 * [DockerHub](https://hub.docker.com/r/alexpalper06/p2-todolist)
 
-Use the following links to access the main functionalities of the app:
+Use the following links to access the main functionalities:
 * Access the login at [http://localhost:8080/login](http://localhost:8080/login)
 * Register an account at [http://localhost:8080/registro](http://localhost:8080/registro)
 * Check information about the application at [http://localhost:8080/about](http://localhost:8080/about)
@@ -39,37 +39,42 @@ Use the following links to access the main functionalities of the app:
 -----
 
 ## Implemented Functionalities
-
+A brief description is given for each functionality implemented and important changes made to the source code are documented.
 ### Menu Bar
 
 The application features a responsive navigation bar implemented as a reusable **Thymeleaf fragment**. It dynamically adapts based on the user's authentication state.
 
 #### 1\. Session Management
 
-The `ManagerUserSession` was enhanced to store the `username` globally, allowing the navbar to display the logged in user's name.
+The `ManagerUserSession` was modified to store the `username` globally, allowing the navbar to display the logged in user's name.
 
 ```java
-public void logearUsuario(Long idUsuario, String username) {
+public void logearUsuario(Long idUsuario, String username, UsuarioRol rol) {
     session.setAttribute("idUsuarioLogeado", idUsuario);
     session.setAttribute("username", username);
+    session.setAttribute("rolUsuarioLogeado", rol);
 }
 ```
 
 #### 2\. Controller Integration
 
-The `LoginController` passes user metadata to the session upon successful authentication:
+The `LoginController` passes user metadata to the session upon successful authentication in order to change the visibility of
+items in the menu:
 
 ```java
 if (loginStatus == UsuarioService.LoginStatus.LOGIN_OK) {
-    UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
-    managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre());
-    return "redirect:/usuarios/" + usuario.getId() + "/tareas";
+    UsuarioData usuario = usuarioService.findByEmail(email);
+    
+    managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre(), usuario.getRol());
+    
+    // ... Redirection 
 }
 ```
 
 #### 3\. Template Logic (`fragments.html`)
 
-The navbar uses `th:if` logic to toggle visibility of links. Authenticated users see "Tasks" and a user dropdown, while unauthenticated users see "Login/Register."
+The navbar uses `th:if` logic to toggle visibility of links. Authenticated users see "Tasks" and a user dropdown, while unauthenticated users see "Login/Register".
+Administrators are able to see the list of users explained below:
 
 ```html
 <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light">
@@ -83,6 +88,9 @@ The navbar uses `th:if` logic to toggle visibility of links. Authenticated users
             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
                 <span th:text="${session.username}">User</span>
             </a>
+        <li class="nav-item" th:if="${session.idUsuarioLogeado != null && @managerUserSession.isAdmin()}">
+            <a class="nav-link" th:href="@{/registered}">User List</a>
+        </li>
             <div class="dropdown-menu">
                 <a class="dropdown-item text-danger" th:href="@{/logout}">Log out</a>
             </div>
@@ -100,7 +108,7 @@ manager mock is used on each test.
 ```java
 when(managerUserSession.usuarioLogeado()).thenReturn(usuarioId);
 ```
-Tests were created in ther corresponding controllers in order to maintain modilarity.
+Tests were created in their corresponding controllers in order to maintain modularity.
 * **`AboutPageTest`**: Checks that Username appears when logged in, and login and register does when not.
 Mocks of session attributes `.sessionAttr` were used to check the behaviour.
 ```java
@@ -114,6 +122,7 @@ when(managerUserSession.usuarioLogeado()).thenReturn(userId);
 this.mockMvc.perform(get("/about")
                 .sessionAttr("idUsuarioLogeado", userId)
                 .sessionAttr("username", username))
+                .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER)
         .andExpect(content().string(allOf(
                 // Ensure Login and Register are NOT shown
                 not(containsString("href=\"/login\">Login")),
@@ -153,7 +162,8 @@ this.mockMvc.perform(get("/login"))
 
 ### User List
 
-This functionality provides a paginated user directory at **`GET /registered`** accessible only to admin users. It uses a lightweight DTO (`UserPreviewData`) so only the needed fields are exposed.
+This functionality provides a paginated user directory at **`GET /registered`** accessible only to admin users. 
+It uses a DTO (`UserPreviewData`) so only the needed fields are exposed.
 
 #### 1. DTO
 
@@ -166,7 +176,9 @@ This class is used in the service and controller layer to transfer user preview 
 
 #### 2. Service Layer
 
-A method in `UsuarioService` has been added, `findAllUsersPreview(Pageable pageable)`, with `@Transactional(readOnly = true)` and which entities via `ModelMapper`. It uses the class `Page` from Spring to allow pagination:
+A method in `UsuarioService` has been added, `findAllUsersPreview(Pageable pageable)`, with `@Transactional(readOnly = true)` and which entities via `ModelMapper`. 
+It uses the class `Page` from Spring to allow pagination, improving data transmission between server and user by providing the list
+by chunks:
 
 ```java
 public Page<UserPreviewData> findAllUsersPreview(Pageable pageable) {
@@ -177,7 +189,8 @@ public Page<UserPreviewData> findAllUsersPreview(Pageable pageable) {
 
 #### 3. Controller Layer
 
-`UserListController` handles the request and writes pagination model attributes. Uses `page` and `size` number in order to get information by chunks. To enable pagination, pagination state must be added to the model context.
+`UserListController` handles the request and writes pagination model attributes. Uses `page` and `size` number in order to get information by chunks. 
+To enable pagination, the pagination state such as current page or total number of pages must be added to the model context.
 
 ```java
 @GetMapping("/registered")
@@ -216,12 +229,24 @@ The template includes `fragments::navbar` and `fragments::head`, iterates `th:ea
 ```
 
 Pagination controls use Bootstrap buttons and `th:classappend` for active/disabled states.
+To provide a list of pages closest to the actual page, a range of pagination numbers were calculated using the position
+of the current page and the relative distances between the start and the end. 
+```thymeleafexpressions
+<ul class="pagination mb-0 justify-content-center"
+    th:with="
+    maxVisible=5,
+    half=2,
+    pStart=${(currentPage - half) < 0 ? 0 : (currentPage - half)},
+    pEnd=${(pStart + maxVisible - 1) >= totalPages ? (totalPages - 1) : (pStart + maxVisible - 1)},
+    start=${(pEnd - maxVisible + 1) <= 0 ? 0 : (pEnd - maxVisible + 1)},
+    end=${pEnd}">
+```
 
 #### Testing
 
-`UserListWebTest` validates:
+`UserListWebTest` validates with tests several elements:
 * `/registered` renders `User List` and navbar content.
-* pagination navigation delivers users 11-20 on page 2.
+* pagination navigation delivers users correctly on their correspondent page.
 * model attributes (`users`, `currentPage`, `totalPages`, `totalItems`, `hasNext`, `hasPrevious`) are present.
 
 ```java
@@ -234,7 +259,7 @@ this.mockMvc.perform(get("/registered").param("page", "1"))
     )));
 ```
 
-`UsuarioServiceTest` validates:
+`UsuarioServiceTest` validates by mocking a list of users and pagination parameters:
 * `testFindNoUser` empty pages are handled.
 * `testFindSingleUser` returns exactly one user DTO with correct fields.
 * `testFindAllLessThanPageLimit` returns all users when count < page size.
@@ -287,6 +312,7 @@ public UserDetailData findDetailsById(Long usuarioId) {
 ```java
 @GetMapping("/registered/{id}")
 public String viewUserDetails(@PathVariable Long id, Model model) {
+    checkAdminAccess();
     UserDetailData user = usuarioService.findDetailsById(id);
     model.addAttribute("user", user);
     return "detalleUsuario";
@@ -329,11 +355,11 @@ The template includes `fragments::navbar` and `fragments::head`, displays user d
 </div>
 ```
 
-To allow the user navigate to a specific user's profile, the User List page (`listaUsuarios.html`) was updated to link user names to the detail page:
+To allow the user navigate to a specific user's profile, the User List page (`listaUsuarios.html`) was updated to link users to the detail page:
 
 ```html
-<td class="text-truncate">
-    <a th:href="@{/registered/{id}(id=${user.id})}" th:text="${user.nombre}"></a>
+<td>
+    <a th:href="@{/registered/{id}(id=${user.id})}" class="btn btn-primary btn-sm">View Details</a>
 </td>
 ```
 
@@ -342,9 +368,10 @@ To allow the user navigate to a specific user's profile, the User List page (`li
 `UserListWebTest` validates:
 * `/registered/1` renders user details correctly when user exists.
 * `/registered/999` shows error message when user does not exist.
-* Model attribute `user` is present and populated correctly.
+* Model attribute `user` is present.
 * Links in the User List page navigate to `/registered/{id}` endpoints.
 
+Example of code used in those tests:
 ```java
 @Test
 public void testViewUserDetailsFound() throws Exception {
@@ -388,7 +415,8 @@ public void testFindDetailsById() {
 
 ### Admin User
 
-This functionality is provided by implementing a simple rol-based system. This could have been implemented with SpringSecurity library for Role-based authentication, but given limited time the other system was developed.
+This functionality is provided by implementing a simple rol-based system. A more elegant solution would've been implemented 
+with SpringSecurity library for Role-based authentication, but given limited time the other system was developed.
 
 #### 1. Role Enum
 
@@ -470,7 +498,7 @@ public void logearUsuario(Long idUsuario, String username, UsuarioRol rol) {
 
 The `LoginController` was modified to:
 
-- **Login and Register**: When the user log ins or  register they're redirected to their respecitve sections; `/registered` for admin users and task list for regular users. This was allowed by refactoring authentication logic to an external method.
+- **Login and Register**: When the user log ins or  register they're redirected to their respecitve sections; `/registered` for admin users and task list for regular users. Refactoring authentication logic to an external method was required for this.
 
 ```java
 private String performLogin(String email, String password, Model model) {
@@ -550,7 +578,7 @@ public void setRol(UsuarioRol rol) {
 }
 ```
 
-The `RegistroData` DTO includes an admin flag with a default value of `false`. This is necessary for the registration form checkbox:
+The `RegistroData` DTO includes an admin flag with a default value of `false`. This is necessary for the thymeleaf checkbox binding:
 
 ```java
 private Boolean isAdmin = false;
@@ -581,7 +609,7 @@ The registration form conditionally displays an admin checkbox only when no admi
 
 #### 9. Testing
 
-Comprehensive test coverage was implemented in both service and controller layers:
+Tests were implemented in both service and controller layers:
 
 **Service Layer (`UsuarioServiceTest`)**:
 
@@ -651,7 +679,6 @@ public void testAdminLoginRedirect() throws Exception {
 }
 ```
 
-
 -----
 
 ### User List and Description Protection
@@ -703,10 +730,7 @@ public String listUsers(
 @GetMapping("/registered/{id}")
 public String viewUserDetails(@PathVariable Long id, Model model) {
     checkAdminAccess();
-    
-    UserDetailData user = usuarioService.findDetailsById(id);
-    model.addAttribute("user", user);
-    return "detalleUsuario";
+    // ...
 }
 ```
 
@@ -715,13 +739,13 @@ public String viewUserDetails(@PathVariable Long id, Model model) {
 The navigation bar template was updated to conditionally display the "User List" link only for authenticated admin users using Thymeleaf conditionals:
 
 ```html
-<li class="nav-item" th:if="${session.idUsuarioLogeado != null && session.isAdmin}">
+<li class="nav-item" th:if="${session.idUsuarioLogeado != null &&@managerUserSession.isAdmin()}">
     <a class="nav-link" th:href="@{/registered}">User List</a>
 </li>
 ```
 
 #### 5. Testing
-Tests were implmented to check the authorization worked. Navigation bar related test was forked into different situations given the status of the user:
+Tests were implemented to check the authorization worked. Navigation bar related test was forked into different situations given the status of the user:
 
 **Controller Layer `UserListWebTest`**:
 
