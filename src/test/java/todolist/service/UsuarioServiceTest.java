@@ -3,6 +3,7 @@ package todolist.service;
 import todolist.dto.UsuarioData;
 import todolist.dto.UserDetailData;
 import todolist.dto.UserPreviewData;
+import todolist.model.UsuarioRol;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ public class UsuarioServiceTest {
         UsuarioData usuario = new UsuarioData();
         usuario.setEmail("richard@umh.es");
         usuario.setNombre("Richard Stallman");
+        usuario.setRol(UsuarioRol.USER);
         usuario.setPassword("1234");
         UsuarioData nuevoUsuario = usuarioService.registrar(usuario);
         return nuevoUsuario.getId();
@@ -298,5 +300,102 @@ public class UsuarioServiceTest {
         assertThat(usuarioDetalle).isNull();
     }
 
-   
+    @Test
+    public void testAdminExistsFalse() {
+        // GIVEN
+        // No admin exists in the database
+
+        // WHEN
+        boolean adminExists = usuarioService.adminExists();
+
+        // THEN
+        // The method returns false
+        assertThat(adminExists).isFalse();
+    }
+
+    @Test
+    public void testAdminExistsTrue() {
+        // GIVEN
+        // An admin user exists in the database
+        UsuarioData admin = new UsuarioData();
+        admin.setEmail("admin@umh.es");
+        admin.setNombre("Admin User");
+        admin.setPassword("1234");
+        admin.setRol(UsuarioRol.ADMIN);
+        usuarioService.registrar(admin);
+
+        // WHEN
+        boolean adminExists = usuarioService.adminExists();
+
+        // THEN
+        // The method returns true
+        assertThat(adminExists).isTrue();
+    }
+
+    @Test
+    public void testDefaultRoleIsUser() {
+        // WHEN
+        // We register a user without specifying a role
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("usuario.prueba@gmail.com");
+        usuario.setPassword("12345678");
+        usuario.setNombre("Prueba User");
+
+        UsuarioData usuarioRegistrado = usuarioService.registrar(usuario);
+
+        // THEN
+        // The user should have the role USER by default
+        assertThat(usuarioRegistrado.getRol()).isEqualTo(todolist.model.UsuarioRol.USER);
+
+        // Verify in database
+        UsuarioData usuarioBD = usuarioService.findByEmail("usuario.prueba@gmail.com");
+        assertThat(usuarioBD.getRol()).isEqualTo(todolist.model.UsuarioRol.USER);
+    }
+
+    @Test
+    public void testRegisterAsAdmin() {
+        // WHEN
+        // We register an admin user
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("admin.prueba@gmail.com");
+        usuario.setPassword("12345678");
+        usuario.setNombre("Admin Prueba");
+        usuario.setRol(todolist.model.UsuarioRol.ADMIN);
+
+        UsuarioData usuarioRegistrado = usuarioService.registrar(usuario);
+
+        // THEN
+        // The user should have the ADMIN role
+        assertThat(usuarioRegistrado.getRol()).isEqualTo(todolist.model.UsuarioRol.ADMIN);
+
+        // Verify in database
+        UsuarioData usuarioBD = usuarioService.findByEmail("admin.prueba@gmail.com");
+        assertThat(usuarioBD.getRol()).isEqualTo(todolist.model.UsuarioRol.ADMIN);
+    }
+
+    @Test
+    public void testCannotRegisterMultipleAdmins() {
+        // GIVEN
+        // An admin user already exists
+        UsuarioData admin1 = new UsuarioData();
+        admin1.setEmail("admin1@umh.es");
+        admin1.setPassword("1234");
+        admin1.setNombre("Admin 1");
+        admin1.setRol(todolist.model.UsuarioRol.ADMIN);
+        usuarioService.registrar(admin1);
+
+        // WHEN, THEN
+        // Trying to register another admin throws an exception
+        UsuarioData admin2 = new UsuarioData();
+        admin2.setEmail("admin2@umh.es");
+        admin2.setPassword("1234");
+        admin2.setNombre("Admin 2");
+        admin2.setRol(todolist.model.UsuarioRol.ADMIN);
+
+        Assertions.assertThrows(UsuarioServiceException.class, () -> {
+            usuarioService.registrar(admin2);
+        });
+    }
+
+
 }

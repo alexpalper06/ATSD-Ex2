@@ -124,14 +124,14 @@ this.mockMvc.perform(get("/about")
                 not(containsString("href=\"/registro\">Register"),
                 containsString("id=\"userDropdown\""),
                 containsString(username)
-...
+// ...
 
 ```
 * **`TareaWebTest`**: Ensures the "Tasks" link maintains the correct path (e.g., `/usuarios/1/tareas`), on listing, 
 creation and modification.
 ```java
 // Code snippet used to check the url maintains the correct path
-...
+// ...
 String url = "/usuarios/" + usuarioId.toString() + "/tareas";
 
 this.mockMvc.perform(get(url).sessionAttr("idUsuarioLogeado", usuarioId))
@@ -140,7 +140,7 @@ this.mockMvc.perform(get(url).sessionAttr("idUsuarioLogeado", usuarioId))
     // Tasks link should be present with correct user ID
         containsString("href=\"" + url + "\">Tasks")
     ));
-...
+// ...
 ```
 * **`UsuarioWebTest`**: Confirms the navbar is excluded from Login/Registration.
 ```java
@@ -383,6 +383,273 @@ public void testFindDetailsById() {
     assertThat(usuarioDetalle.getId()).isEqualTo(usuarioId);
     assertThat(usuarioDetalle.getNombre()).isEqualTo("Richard Stallman");
     assertThat(usuarioDetalle.getEmail()).isEqualTo("richard@umh.es");
+}
+```
+
+-----
+
+### Admin User
+
+This functionality is provided by implementing a simple rol-based system. This could have been implemented with SpringSecurity library for Role-based authentication, but given limited time the other system was developed.
+
+#### 1. Role Enum
+
+A new enum `UsuarioRol` was created with two values:
+
+```java
+public enum UsuarioRol {
+    USER,
+    ADMIN
+}
+```
+
+#### 2. Entity Changes
+
+The `Usuario` entity was assigned a role field with a default value of `USER`:
+
+```java
+@Enumerated(EnumType.STRING)
+@Column(nullable = false)
+private UsuarioRol rol = UsuarioRol.USER;
+
+// Ensure default role if null at persistence
+@PrePersist
+private void ensureRol() {
+    if (rol == null) rol = UsuarioRol.USER;
+}
+```
+
+#### 3. Repository Layer
+
+A method `existsByRol()` was added to `UsuarioRepository` to check if an admin user exists to be used by the service:
+
+```java
+public interface UsuarioRepository extends PagingAndSortingRepository<Usuario, Long>, CrudRepository<Usuario, Long> {
+    Optional<Usuario> findByEmail(String s);
+    boolean existsByRol(UsuarioRol rol);
+}
+```
+
+#### 4. Service Layer
+
+The `UsuarioService` includes:
+
+- **`adminExists()`**: Checks if an admin user exists in the system using the repository method.
+
+```java
+@Transactional(readOnly = true)
+public boolean adminExists() {
+    return usuarioRepository.existsByRol(UsuarioRol.ADMIN);
+}
+```
+
+- **`registrar()`**: Modified to prevent registration of multiple admins on backend level:
+
+```java
+@Transactional
+public UsuarioData registrar(UsuarioData usuario) {
+    Optional<Usuario> usuarioBD = usuarioRepository.findByEmail(usuario.getEmail());
+    // ...
+    else if (usuario.getRol() == UsuarioRol.ADMIN && adminExists())
+        throw new UsuarioServiceException("Ya existe un administrador en el sistema");
+    //...
+}
+```
+
+#### 5. Session Management
+
+The `ManagerUserSession` class was modified to store user rol information:
+
+```java
+public void logearUsuario(Long idUsuario, String username, UsuarioRol rol) {
+    session.setAttribute("idUsuarioLogeado", idUsuario);
+    session.setAttribute("username", username);
+    session.setAttribute("rolUsuarioLogeado", rol);
+}
+```
+
+#### 6. Controller Logic
+
+The `LoginController` was modified to:
+
+- **Login and Register**: When the user log ins or  register they're redirected to their respecitve sections; `/registered` for admin users and task list for regular users. This was allowed by refactoring authentication logic to an external method.
+
+```java
+private String performLogin(String email, String password, Model model) {
+        UsuarioService.LoginStatus loginStatus = usuarioService.login(email, password);
+
+        if (loginStatus != UsuarioService.LoginStatus.LOGIN_OK) {
+            model.addAttribute("loginData", new LoginData(email, password));
+        }
+
+        if (loginStatus == UsuarioService.LoginStatus.LOGIN_OK) {
+            UsuarioData usuario = usuarioService.findByEmail(email);
+
+            managerUserSession.logearUsuario(usuario.getId(), usuario.getNombre(), usuario.getRol());
+
+            if (usuario.getRol() == UsuarioRol.ADMIN) {
+                return "redirect:/registered";
+            }
+            return "redirect:/usuarios/" + usuario.getId() + "/tareas";
+        } else if (loginStatus == UsuarioService.LoginStatus.USER_NOT_FOUND) {
+            model.addAttribute("error", "No existe usuario");
+            return "formLogin";
+        } else if (loginStatus == UsuarioService.LoginStatus.ERROR_PASSWORD) {
+            model.addAttribute("error", "Contraseña incorrecta");
+            return "formLogin";
+        }
+        return "formLogin";
+    }
+```
+- **On Login**: Modified to use the previous method.
+```java
+@PostMapping("/login")
+public String loginSubmit(@ModelAttribute LoginData loginData, Model model, HttpSession session) {
+    // Llamada al servicio para comprobar si el login es correcto
+    return performLogin(loginData.geteMail(), loginData.getPassword(), model);
+}
+```
+
+- **On Registration**: Display the admin checkbox only if no admin exists by setting up an attribute, and set the role accordingly. Logs in automatically for improved user experience.
+
+```java
+@GetMapping("/registro")
+public String registroForm(Model model) {
+    model.addAttribute("registroData", new RegistroData());
+    model.addAttribute("adminExists", usuarioService.adminExists());
+    return "formRegistro";
+}
+
+@PostMapping("/registro")
+public String registroSubmit(@Valid RegistroData registroData, BindingResult result, Model model) {
+    // validation and variable instantiation
+
+    // Set rol to ADMIN if checkbox is selected
+    if (registroData.isAdmin()) {
+        usuario.setRol(UsuarioRol.ADMIN);
+    } else {
+        usuario.setRol(UsuarioRol.USER);
+    }
+
+    usuarioService.registrar(usuario);
+    return performLogin(usuario.getEmail(), usuario.getPassword(), model);
+}
+```
+
+#### 7. DTOs
+
+The `UsuarioData` DTO includes the role field:
+
+```java
+private UsuarioRol rol;
+
+public UsuarioRol getRol() {
+    return rol;
+}
+
+public void setRol(UsuarioRol rol) {
+    this.rol = rol;
+}
+```
+
+The `RegistroData` DTO includes an admin flag with a default value of `false`. This is necessary for the registration form checkbox:
+
+```java
+private Boolean isAdmin = false;
+
+public boolean isAdmin() {
+    return isAdmin;
+}
+
+public void setAdmin(boolean isAdmin) {
+    this.isAdmin = isAdmin;
+}
+```
+
+#### 8. Registration Form (`formRegistro.html`)
+
+The registration form conditionally displays an admin checkbox only when no admin exists:
+
+```html
+<div class="form-group" th:if="${!adminExists}">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="isAdmin" name="isAdmin" th:field="*{admin}" />
+        <label class="form-check-label" for="isAdmin">
+            Registrar como administrador
+        </label>
+    </div>
+</div>
+```
+
+#### 9. Testing
+
+Comprehensive test coverage was implemented in both service and controller layers:
+
+**Service Layer (`UsuarioServiceTest`)**:
+
+- **`testAdminExistsFalse`**: Verifies that `adminExists()` returns false when no admin is in the database.
+
+- **`testAdminExistsTrue`**: Verifies that `adminExists()` returns true when an admin user exists.
+
+- **`testDefaultRoleIsUser`**: Confirms that users registered without specifying a role default to `USER`.
+
+```java
+@Test
+public void testDefaultRoleIsUser() {
+    UsuarioData usuario = new UsuarioData();
+    usuario.setEmail("usuario.prueba@gmail.com");
+    usuario.setPassword("12345678");
+    usuario.setNombre("Prueba User");
+
+    UsuarioData usuarioRegistrado = usuarioService.registrar(usuario);
+
+    assertThat(usuarioRegistrado.getRol()).isEqualTo(UsuarioRol.USER);
+}
+```
+
+**Controller Layer (`UsuarioWebTest`)**:
+
+- **`adminCheckboxVisibleWhenNoAdminExists`**: Verifies the admin checkbox appears on the registration form when no admin exists.
+
+```java
+@Test
+public void adminCheckboxVisibleWhenNoAdminExists() throws Exception {
+    when(usuarioService.adminExists()).thenReturn(false);
+    
+    this.mockMvc.perform(get("/registro"))
+        .andExpect(content().string(containsString("Registrar como administrador")));
+}
+```
+
+- **`adminCheckboxHiddenWhenAdminExists`**: Verifies the admin checkbox is hidden after an admin is registered.
+
+```java
+@Test
+public void adminCheckboxHiddenWhenAdminExists() throws Exception {
+    when(usuarioService.adminExists()).thenReturn(true);
+    
+    this.mockMvc.perform(get("/registro"))
+        .andExpect(content().string(not(containsString("Registrar como administrador"))));
+}
+```
+
+- **`testAdminLoginRedirect`**: Verifies that admin users are redirected to `/registered` after login.
+
+```java
+@Test
+public void testAdminLoginRedirect() throws Exception {
+    // ... user setup
+
+    when(usuarioService.login("admin@gmail.com", "12345678"))
+        .thenReturn(UsuarioService.LoginStatus.LOGIN_OK);
+    when(usuarioService.findByEmail("admin@gmail.com"))
+        .thenReturn(adminUser);
+
+    this.mockMvc.perform(post("/login")
+            .param("eMail", "admin@gmail.com")
+            .param("password", "12345678"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/registered"));
 }
 ```
 

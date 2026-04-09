@@ -1,5 +1,7 @@
 package todolist.model;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -24,6 +26,9 @@ public class Usuario implements Serializable {
     @Column(name = "fecha_nacimiento")
     @Temporal(TemporalType.DATE)
     private Date fechaNacimiento;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UsuarioRol rol = UsuarioRol.USER;
 
     // La relación es lazy por defecto,
     // es necesario acceder a la lista de tareas para que se carguen
@@ -87,10 +92,24 @@ public class Usuario implements Serializable {
         this.fechaNacimiento = fechaNacimiento;
     }
 
+    public UsuarioRol getRol() {
+        return rol;
+    }
+
+    public void setRol(UsuarioRol rol) {
+        this.rol = rol;
+    }
+
     // Getters y setters de la relación
 
     public Set<Tarea> getTareas() {
         return tareas;
+    }
+
+    // Method to ensure default rol if its null
+    @PrePersist
+    private void ensureRol() {
+        if (rol == null) rol = UsuarioRol.USER;
     }
 
     // Método helper para añadir una tarea a la lista y establecer la relación inversa
