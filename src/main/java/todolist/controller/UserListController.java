@@ -1,5 +1,7 @@
 package todolist.controller;
 
+import todolist.authentication.ManagerUserSession;
+import todolist.controller.exception.AccesoNoAutorizadoException;
 import todolist.dto.UserDetailData;
 import todolist.dto.UserPreviewData;
 import todolist.service.UsuarioService;
@@ -21,11 +23,22 @@ public class UserListController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private ManagerUserSession managerUserSession;
+
+    private void checkAdminAccess() {
+        if (!managerUserSession.isAdmin()) {
+            throw new AccesoNoAutorizadoException();
+        }
+    }
+
     @GetMapping("/registered")
     public String listUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model, HttpSession session) {
+
+        checkAdminAccess();
 
         Pageable pageable = PageRequest.of(page, size);
         Page<UserPreviewData> usersPage = usuarioService.findAllUsersPreview(pageable);
@@ -42,6 +55,8 @@ public class UserListController {
 
     @GetMapping("/registered/{id}")
     public String viewUserDetails(@PathVariable Long id, Model model) {
+        checkAdminAccess();
+
         UserDetailData user = usuarioService.findDetailsById(id);
         model.addAttribute("user", user);
         return "detalleUsuario";
