@@ -1,19 +1,26 @@
 package todolist.controller;
 
 import todolist.dto.UsuarioData;
+import todolist.dto.UserPreviewData;
 import todolist.service.UsuarioService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import todolist.model.UsuarioRol;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.ArrayList;
 
 
 @SpringBootTest
@@ -234,5 +241,43 @@ public class UsuarioWebTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/registered"));
     }
+
+    @Test
+    public void testListUsersOnlyAdmin() throws Exception {
+        // GIVEN
+        // A standard user is logged in (not admin)
+        // WHEN
+        // We make a GET request to /registered without admin role
+
+        // THEN
+        // The response should be UNAUTHORIZED with "insufficient permissions" error
+        this.mockMvc.perform(get("/registered")
+                        .sessionAttr("idUsuarioLogeado", 2L)
+                        .sessionAttr("username", "standarUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(containsString("insufficient permissions")));
+    }
+
+    @Test
+    public void testSuccessAdminAccess() throws Exception {
+        // GIVEN
+        // An admin user is logged in
+        // Mock the service to return an empty page
+        Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
+        when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+
+        // WHEN
+        // We make a GET request to /registered with admin role
+
+        // THEN
+        // The response should be OK
+        this.mockMvc.perform(get("/registered")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "adminUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
+                .andExpect(status().isOk());
+    }
+
 }
 
