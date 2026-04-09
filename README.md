@@ -1,7 +1,3 @@
-This revised version of the **README.md** streamlines the documentation while retaining the essential technical implementation details and code snippets required for the ATSD P2 project.
-
------
-
 # To Do List App (Spring Boot & Thymeleaf)
 
 A task management application built with **Spring Boot** and **Thymeleaf**.
@@ -50,7 +46,7 @@ The application features a responsive navigation bar implemented as a reusable *
 
 #### 1\. Session Management
 
-The `ManagerUserSession` was enhanced to store the `username` globally, allowing the navbar to display the logged-in user's name.
+The `ManagerUserSession` was enhanced to store the `username` globally, allowing the navbar to display the logged in user's name.
 
 ```java
 public void logearUsuario(Long idUsuario, String username) {
@@ -110,7 +106,7 @@ Mocks of session attributes `.sessionAttr` were used to check the behaviour.
 ```java
 // Example of part of code used to check tha when the user is logged in, Account drop down menu appears instead of login and register
 
-// Mock the managerUserSession to simulate a logged-in user
+// Mock the managerUserSession to simulate a logged in user
 when(managerUserSession.usuarioLogeado()).thenReturn(userId);
 
 // WHEN, THEN
@@ -674,7 +670,7 @@ public class AccesoNoAutorizadoException extends RuntimeException {
 
 #### 2. Session Management Enhancement
 
-The `ManagerUserSession` class includes an `isAdmin()` method to check if the logged-in user has admin privileges:
+The `ManagerUserSession` class includes an `isAdmin()` method to check if the logged in user has admin privileges:
 
 ```java
 public boolean isAdmin() {
@@ -796,8 +792,4 @@ public void testUserListInNavAsUser() throws Exception {
     .andExpect(content().string(not(containsString("/registered"))));
 }
 ```
-
-This protection ensures that sensitive user information (user list and individual profiles) is only accessible to administrators.
-
------
 
