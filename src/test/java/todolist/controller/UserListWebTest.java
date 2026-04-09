@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -47,6 +48,7 @@ public class UserListWebTest {
         // Mock the service to return an empty page
         Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
         when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         // WHEN
         // We make a GET request to /registered with admin role
@@ -106,6 +108,7 @@ public class UserListWebTest {
         // Mock the service to return an empty page
         Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
         when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         // WHEN
         // We make a GET request to /registered with admin role
@@ -126,6 +129,7 @@ public class UserListWebTest {
         // Mock the service to return an empty page
         Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
         when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+        when(managerUserSession.isAdmin()).thenReturn(false);
 
         // WHEN
         // We make a GET request to /registered with standard user role
@@ -252,6 +256,23 @@ public class UserListWebTest {
     }
 
     @Test
+    public void testUnauthorizedAccessToUserDetails() throws Exception {
+        // GIVEN
+        // A standard user is logged in (not admin)
+
+        // WHEN
+        // We make a GET request to /registered/1 with standard user role
+
+        // THEN
+        // The response should be Forbidden
+        this.mockMvc.perform(get("/registered/1")
+                        .sessionAttr("idUsuarioLogeado", 2L)
+                        .sessionAttr("username", "standardUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     public void testViewUserDetailsFound() throws Exception {
         // GIVEN
         // A user detail data exists
@@ -262,6 +283,7 @@ public class UserListWebTest {
         userDetails.setFechaNacimiento(new Date());
 
         when(usuarioService.findDetailsById(1L)).thenReturn(userDetails);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         // WHEN
         // We make a GET request to /registered/1
@@ -288,6 +310,7 @@ public class UserListWebTest {
         // GIVEN
         // No user exists with id 999
         when(usuarioService.findDetailsById(999L)).thenReturn(null);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         // WHEN
         // We make a GET request to /registered/999
