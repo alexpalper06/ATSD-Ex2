@@ -35,9 +35,10 @@ public class ManagerUserSession {
         return (UsuarioRol) session.getAttribute("rolUsuarioLogeado");
     }
 
+
     public boolean isAdmin() {
         UsuarioRol rol = (UsuarioRol) session.getAttribute("rolUsuarioLogeado");
-        return rol != null && rol == UsuarioRol.ADMIN;
+        return rol == UsuarioRol.ADMIN;
     }
 
     public void logout() {

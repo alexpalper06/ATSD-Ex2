@@ -1,10 +1,10 @@
 package todolist.controller;
 
 import todolist.authentication.ManagerUserSession;
-import todolist.dto.UsuarioData;
 import todolist.dto.UserDetailData;
 import todolist.dto.UserPreviewData;
 import todolist.service.UsuarioService;
+import todolist.model.UsuarioRol;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -40,18 +40,23 @@ public class UserListWebTest {
     private ManagerUserSession managerUserSession;
 
     @Test
-    public void testUserListInNavbar() throws Exception {
-       
+    public void testUserListInNavAsAdmin() throws Exception {
+        // GIVEN
+        // An admin user is logged in
         // Mock the service to return an empty page
         Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
         when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         // WHEN
-        // We make a GET request to /registered
+        // We make a GET request to /registered with admin role
 
         // THEN
         // The resulting HTML contains the "User List" link within the navbar structure
-        this.mockMvc.perform(get("/registered"))
+        this.mockMvc.perform(get("/registered")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "adminUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(content().string(allOf(
                         containsString("User List"),
@@ -61,10 +66,104 @@ public class UserListWebTest {
     }
 
     @Test
+    public void testUserListInNavAsUser() throws Exception {
+        // GIVEN
+        // A standard user is logged in (not admin)
+
+        // WHEN
+        // We make a GET request to /about with user role (we use /about as a page that should be accessible to all, but the navbar should not show admin links)
+
+        // THEN
+        this.mockMvc.perform(get("/about")
+                        .sessionAttr("idUsuarioLogeado", 2L)
+                        .sessionAttr("username", "standardUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER))
+                .andExpect(content().string(not(containsString("User List"))))
+                .andExpect(content().string(not(containsString("/registered"))));
+    }
+
+    @Test
+    public void testUserListInNavAsGuest() throws Exception {
+        // GIVEN
+        // No user is logged in (guest)
+        // Mock the service to return an empty page
+  
+        // WHEN
+        // We make a GET request to /about without any session
+
+        // THEN
+        // The response should be the same as standard user, where there is not User List link
+        this.mockMvc.perform(get("/about"))
+                .andExpect(content().string(not(containsString("User List"))))
+                .andExpect(content().string(not(containsString("/registered"))));
+    }
+
+
+    @Test
+    public void testSuccessAdminAccess() throws Exception {
+        // GIVEN
+        // An admin user is logged in
+        // Mock the service to return an empty page
+        Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
+        when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+        when(managerUserSession.isAdmin()).thenReturn(true);
+
+        // WHEN
+        // We make a GET request to /registered with admin role
+
+        // THEN
+        // The response should be OK
+        this.mockMvc.perform(get("/registered")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "adminUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testForbiddenUserAccess() throws Exception {
+        // GIVEN
+        // A standard user is logged in (not admin)  
+        // Mock the service to return an empty page
+        Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
+        when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+        when(managerUserSession.isAdmin()).thenReturn(false);
+
+        // WHEN
+        // We make a GET request to /registered with standard user role
+
+        // THEN
+        // The response should be Forbidden
+        this.mockMvc.perform(get("/registered")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "standardUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER))
+                .andExpect(status().isForbidden());   
+    }
+
+    @Test
+    public void testForbiddenGuestAccess() throws Exception {
+        // GIVEN
+        // No user is logged in (guest)
+        // Mock the service to return an empty page
+        Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
+        when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+
+        // WHEN
+        // We make a GET request to /registered as guest (no session)
+
+        // THEN
+        // The response should be Forbidden
+        this.mockMvc.perform(get("/registered"))
+                .andExpect(status().isForbidden());   
+    }
+
+    @Test
     public void testPaginationNavigation() throws Exception {
         // GIVEN
         // 25 users mocked (with a default page size of 10, we have multiple pages)
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         List<UserPreviewData> page1Users = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -97,7 +196,10 @@ public class UserListWebTest {
 
         // THEN
         // The correct subset of users (users 11-20) is returned
-        this.mockMvc.perform(get("/registered").param("page", "1"))
+        this.mockMvc.perform(get("/registered").param("page", "1")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "adminUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(content().string(allOf(
                         containsString("<td class=\"text-truncate\">usu11</td>"),
@@ -112,6 +214,7 @@ public class UserListWebTest {
         // GIVEN
         // The service returns a specific page of UserPreviewDTOs
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         List<UserPreviewData> users = Arrays.asList(
                 new UserPreviewData(1L, "Alice", "alice@example.com"),
@@ -128,7 +231,10 @@ public class UserListWebTest {
         // THEN
         // The controller correctly adds the Page object to the Model
         // and the view renders the expected number of user rows
-        this.mockMvc.perform(get("/registered"))
+        this.mockMvc.perform(get("/registered")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "adminUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("users", "currentPage", "totalPages", "totalItems", "hasNext", "hasPrevious"))
                 .andExpect(model().attribute("users", hasSize(3)))
@@ -148,6 +254,23 @@ public class UserListWebTest {
     }
 
     @Test
+    public void testUnauthorizedAccessToUserDetails() throws Exception {
+        // GIVEN
+        // A standard user is logged in (not admin)
+
+        // WHEN
+        // We make a GET request to /registered/1 with standard user role
+
+        // THEN
+        // The response should be Forbidden
+        this.mockMvc.perform(get("/registered/1")
+                        .sessionAttr("idUsuarioLogeado", 2L)
+                        .sessionAttr("username", "standardUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     public void testViewUserDetailsFound() throws Exception {
         // GIVEN
         // A user detail data exists
@@ -158,13 +281,17 @@ public class UserListWebTest {
         userDetails.setFechaNacimiento(new Date());
 
         when(usuarioService.findDetailsById(1L)).thenReturn(userDetails);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         // WHEN
         // We make a GET request to /registered/1
 
         // THEN
         // The user details are correctly displayed
-        this.mockMvc.perform(get("/registered/1"))
+        this.mockMvc.perform(get("/registered/1")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "adminUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("user"))
                 .andExpect(model().attribute("user", userDetails))
@@ -181,13 +308,17 @@ public class UserListWebTest {
         // GIVEN
         // No user exists with id 999
         when(usuarioService.findDetailsById(999L)).thenReturn(null);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         // WHEN
         // We make a GET request to /registered/999
 
         // THEN
         // The view shows a not found message
-        this.mockMvc.perform(get("/registered/999"))
+        this.mockMvc.perform(get("/registered/999")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "adminUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("user", nullValue()))
                 .andExpect(content().string(containsString("User not found")));
@@ -198,6 +329,7 @@ public class UserListWebTest {
         // GIVEN
         // The service returns users with links
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        when(managerUserSession.isAdmin()).thenReturn(true);
 
         List<UserPreviewData> users = Arrays.asList(
                 new UserPreviewData(1L, "Alice", "alice@example.com"),
@@ -212,7 +344,10 @@ public class UserListWebTest {
 
         // THEN
         // The user names are linked to /registered/{id}
-        this.mockMvc.perform(get("/registered"))
+        this.mockMvc.perform(get("/registered")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .sessionAttr("username", "adminUser")
+                        .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(content().string(allOf(
                         containsString("/registered/1"),

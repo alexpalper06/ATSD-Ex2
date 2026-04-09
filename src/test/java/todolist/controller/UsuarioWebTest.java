@@ -1,19 +1,26 @@
 package todolist.controller;
 
 import todolist.dto.UsuarioData;
+import todolist.dto.UserPreviewData;
 import todolist.service.UsuarioService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import todolist.model.UsuarioRol;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.ArrayList;
 
 
 @SpringBootTest
@@ -234,5 +241,7 @@ public class UsuarioWebTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/registered"));
     }
+
+
 }
 

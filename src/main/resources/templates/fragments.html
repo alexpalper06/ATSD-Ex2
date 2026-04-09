@@ -29,7 +29,9 @@
                 <li class="nav-item" th:if="${session.idUsuarioLogeado != null}">
                     <a class="nav-link" th:href="@{/usuarios/{id}/tareas(id=${session.idUsuarioLogeado})}">Tasks</a>
                 </li>
-                <li class="nav-item"> <!-- For optional, made this only visible to admins -->
+
+                <!-- Using @ syntax calling directly on managerUserSession bean -->
+                <li class="nav-item" th:if="${session.idUsuarioLogeado != null && @managerUserSession.isAdmin()}">
                     <a class="nav-link" th:href="@{/registered}">User List</a>
                 </li>
             </ul>

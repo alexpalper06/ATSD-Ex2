@@ -38,7 +38,7 @@ Use the following links to access the main functionalities of the app:
 * Access the login at [http://localhost:8080/login](http://localhost:8080/login)
 * Register an account at [http://localhost:8080/registro](http://localhost:8080/registro)
 * Check information about the application at [http://localhost:8080/about](http://localhost:8080/about)
-* Check list of users at [http://localhost:8080/registered](http://localhost:8080/registered)
+* **Admin only**. Check list of users at [http://localhost:8080/registered](http://localhost:8080/registered)
 * **Login required**. Check your tasks at [http://localhost:8080/usuarios/{id}/tareas](http://localhost:8080/usuarios/{id}/tareas)
 -----
 
@@ -157,7 +157,7 @@ this.mockMvc.perform(get("/login"))
 
 ### User List
 
-This functionality provides a paginated user directory at **`GET /registered`** for any user. It uses a lightweight DTO (`UserPreviewData`) so only the needed fields are exposed.
+This functionality provides a paginated user directory at **`GET /registered`** accessible only to admin users. It uses a lightweight DTO (`UserPreviewData`) so only the needed fields are exposed.
 
 #### 1. DTO
 
@@ -188,6 +188,8 @@ public Page<UserPreviewData> findAllUsersPreview(Pageable pageable) {
 public String listUsers(@RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size,
                         Model model) {
+    checkAdminAccess(); // More information on the functionality User List & Description Protection
+
     Pageable pageable = PageRequest.of(page, size);
     Page<UserPreviewData> usersPage = usuarioService.findAllUsersPreview(pageable);
 
@@ -257,7 +259,7 @@ assertThat(user.getEmail()).isEqualTo("richard@umh.es");
 
 ### User Description
 
-This functionality allows users to view the complete profile of a registered account through a detail page accessible from the User List. It uses a specialized DTO (`UserDetailData`) to expose only the necessary information.
+This functionality allows admin users to view the complete profile of a registered account through a detail page accessible from the User List. It uses a specialized DTO (`UserDetailData`) to expose only the necessary information.
 
 #### 1. DTO
 
@@ -654,4 +656,148 @@ public void testAdminLoginRedirect() throws Exception {
 ```
 
 
+-----
+
+### User List and Description Protection
+
+This functionality implements authorization checks to ensure that only admin users can access the user list and user profile pages. Non-admin users attempting to access these endpoints receive an unauthorized access exception.
+
+#### 1. Authorization Exception
+
+A custom exception `AccesoNoAutorizadoException` was created to handle unauthorized access attempts:
+
+```java
+@ResponseStatus(value = HttpStatus.FORBIDDEN, reason="Acceso no autorizado a usuarios estandar")
+public class AccesoNoAutorizadoException extends RuntimeException {
+}
+```
+
+#### 2. Session Management Enhancement
+
+The `ManagerUserSession` class includes an `isAdmin()` method to check if the logged-in user has admin privileges:
+
+```java
+public boolean isAdmin() {
+    UsuarioRol rol = (UsuarioRol) session.getAttribute("rolUsuarioLogeado");
+    return rol != null && rol == UsuarioRol.ADMIN;
+}
+```
+
+#### 3. Controller Layer Protection
+
+The `UserListController` was modified to include authorization checks before processing requests. A `checkAdminAccess()` method verifies admin status and throws an exception if unauthorized:
+
+```java
+private void checkAdminAccess() {
+    if (!managerUserSession.isAdmin()) {
+        throw new AccesoNoAutorizadoException();
+    }
+}
+
+@GetMapping("/registered")
+public String listUsers(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        Model model, HttpSession session) {
+
+    checkAdminAccess();
+    // ... rest of method
+}
+
+@GetMapping("/registered/{id}")
+public String viewUserDetails(@PathVariable Long id, Model model) {
+    checkAdminAccess();
+    
+    UserDetailData user = usuarioService.findDetailsById(id);
+    model.addAttribute("user", user);
+    return "detalleUsuario";
+}
+```
+
+#### 4. Navbar Link Protection
+
+The navigation bar template was updated to conditionally display the "User List" link only for authenticated admin users using Thymeleaf conditionals:
+
+```html
+<li class="nav-item" th:if="${session.idUsuarioLogeado != null && session.isAdmin}">
+    <a class="nav-link" th:href="@{/registered}">User List</a>
+</li>
+```
+
+#### 5. Testing
+Tests were implmented to check the authorization worked. Navigation bar related test was forked into different situations given the status of the user:
+
+**Controller Layer `UserListWebTest`**:
+
+- **`testForbiddenUserAccess` and `testForbiddenGuestAccess`**: Verifies that non-admin users receive an unauthorized response when attempting to access `/registered`.
+
+```java
+@Test
+public void testForbiddenUserAccess() throws Exception {
+    // GIVEN
+    // A standard user is logged in (not admin)  
+    // Mock the service to return an empty page
+    Page<UserPreviewData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
+    when(usuarioService.findAllUsersPreview(any())).thenReturn(emptyPage);
+    when(managerUserSession.isAdmin()).thenReturn(false);
+
+    // WHEN
+    // We make a GET request to /registered with standard user role
+
+    // THEN
+    // The response should be Forbidden
+    this.mockMvc.perform(get("/registered")
+                    .sessionAttr("idUsuarioLogeado", 1L)
+                    .sessionAttr("username", "standardUser")
+                    .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER))
+            .andExpect(status().isForbidden());   
+}
+
+- **`testSuccessAdminAccess`**: Verifies that admin users can access `/registered`.
+public void testSuccessAdminAccess() throws Exception {
+    //...
+
+    this.mockMvc.perform(get("/registered")
+                    .sessionAttr("idUsuarioLogeado", 1L)
+                    .sessionAttr("username", "adminUser")
+                    .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
+            .andExpect(status().isOk());
+}
+```
+
+- **`testUserListInNavAsAdmin`**: Verifies the "User List" link is shown in the navbar for admin users.
+- **`testUserListInNavAsUser` and `testUserListInNavAsGuest`**: Verifies the "User List" link is hidden in the navbar for non-admin users.
+
+```java
+@Test
+public void testUserListInNavAsAdmin() throws Exception {
+  
+when(managerUserSession.isAdmin()).thenReturn(true);
+
+this.mockMvc.perform(get("/registered")
+                .sessionAttr("idUsuarioLogeado", 1L)
+                .sessionAttr("username", "adminUser")
+                .sessionAttr("rolUsuarioLogeado", UsuarioRol.ADMIN))
+        .andExpect(status().isOk())
+        .andExpect(content().string(allOf(
+                containsString("User List"),
+                containsString("navbar"),
+                containsString("/registered")
+        )));
+}
+
+@Test
+public void testUserListInNavAsUser() throws Exception {
+    this.mockMvc.perform(get("/about")
+            .sessionAttr("idUsuarioLogeado", 2L)
+            .sessionAttr("username", "standardUser")
+            .sessionAttr("rolUsuarioLogeado", UsuarioRol.USER))
+    .andExpect(content().string(not(containsString("User List"))))
+    .andExpect(content().string(not(containsString("/registered"))));
+}
+```
+
+This protection ensures that sensitive user information (user list and individual profiles) is only accessible to administrators.
+
+-----
 
