@@ -30,6 +30,9 @@ You may access the source code and a packaged runnable version as a docker image
 * [GitHub](https://github.com/alexpalper06/ATSD-Ex2)
 * [DockerHub](https://hub.docker.com/r/alexpalper06/p2-todolist)
 
+Check up the [Trello Board](https://trello.com/b/WUSnUVu2/e2-to-do-list-app) for a description oriented for users of the
+functionalities added.
+
 Use the following links to access the main functionalities:
 * Access the login at [http://localhost:8080/login](http://localhost:8080/login)
 * Register an account at [http://localhost:8080/registro](http://localhost:8080/registro)
