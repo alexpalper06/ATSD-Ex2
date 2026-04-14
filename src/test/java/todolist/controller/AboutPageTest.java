@@ -35,7 +35,7 @@ public class AboutPageTest {
         this.mockMvc.perform(get("/about"))
                 .andExpect(content().string(allOf(
                         // About link
-                        containsString("href=\"/about\"")
+                        containsString("href=\"/home\"")
                 )));
     }
     @Test
