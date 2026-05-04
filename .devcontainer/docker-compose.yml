@@ -4,31 +4,31 @@ volumes:
 services:
   app:
     container_name: javadev
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     environment:
       # NOTE: POSTGRES_DB/USER/PASSWORD should match values in db container
-        POSTGRES_PASSWORD: atsd
-        POSTGRES_USER: atsd
-        POSTGRES_DB: atsd
-        POSTGRES_HOSTNAME: localhost
+      POSTGRES_PASSWORD: atsd
+      POSTGRES_USER: atsd
+      POSTGRES_DB: atsd
+      POSTGRES_HOSTNAME: localhost
 
-#    volumes:
-#      - ../..:/workspaces:cached
-      
+      #    volumes:
+      #      - ../..:/workspaces:cached
+
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
 
     # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
     # Uncomment if doesnt work
-    # network_mode: service:localhost
+    network_mode: service:postgres
 
-    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
-  localhost: # Named 'localhost' so Spring app can use 'jdbc:postgresql://localhost:5432/atsd' on application propperties
-    container_name: localhost
+  postgres: # The postgres DB will be accesed thorugh "localhost" in the devcontainer thanks to POSTGRES_HOSTNAME
+    container_name: postgres
     image: postgres:13
     restart: unless-stopped
     volumes:
