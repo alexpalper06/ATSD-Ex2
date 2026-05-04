@@ -1,10 +1,5 @@
 volumes:
-  postgres-dev-data:
-  postgres-test-data:
-
-networks:
-  app-network:
-    driver: bridge
+  postgres-data:
 
 services:
   app:
@@ -14,12 +9,10 @@ services:
       dockerfile: Dockerfile
     environment:
       # NOTE: POSTGRES_DB/USER/PASSWORD should match values in db container
-        POSTGRES_USER: atsd
         POSTGRES_PASSWORD: atsd
-        POSTGRES_DEV_DB: atsd
-        POSTGRES_TEST_DB: atsd_test
-        POSTGRES_HOSTNAME: postgres-dev
-        POSTGRES_TEST_HOSTNAME: postgres-test
+        POSTGRES_USER: atsd
+        POSTGRES_DB: atsd
+        POSTGRES_HOSTNAME: localhost
 
 #    volumes:
 #      - ../..:/workspaces:cached
@@ -28,39 +21,22 @@ services:
     command: sleep infinity
 
     # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
-    #network_mode: service:db-dev
-    networks:
-      - app-network
+    network_mode: service:localhost
+
     # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
-  postgres-dev:
-    container_name: postgres-dev
+  localhost:
+    container_name: localhost
     image: postgres:13
     restart: unless-stopped
     volumes:
-      - postgres-dev-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     environment:
       # NOTE: POSTGRES_DB/USER/PASSWORD should match values in app container
       POSTGRES_PASSWORD: atsd
       POSTGRES_USER: atsd
       POSTGRES_DB: atsd
 
-    networks:
-      - app-network
-
-  postgres-test:
-    container_name: postgres-test
-    image: postgres:13
-    restart: unless-stopped
-    volumes:
-      - postgres-test-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_PASSWORD: atsd
-      POSTGRES_USER: atsd
-      POSTGRES_DB: atsd_test
-
-    networks:
-      - app-network
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
