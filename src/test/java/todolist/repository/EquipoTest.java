@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,5 +110,19 @@ public class EquipoTest {
         assertThat(usuario.getEquipos()).contains(equipo);
     }
 
+    @Test
+    @Transactional
+    public void comprobarFindAll() {
+        // GIVEN
+        // Dos equipos en la base de datos
+        equipoRepository.save(new Equipo("Proyecto 2"));
+        equipoRepository.save(new Equipo("Proyecto 3"));
+
+        // WHEN
+        List<Equipo> equipos = equipoRepository.findAll();
+
+        // THEN
+        assertThat(equipos).hasSize(2);
+    }
 
 }
