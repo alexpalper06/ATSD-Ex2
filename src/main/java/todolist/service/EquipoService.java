@@ -1,10 +1,11 @@
 package todolist.service;
 
 import todolist.dto.EquipoData;
-import todolist.dto.TareaData;
 import todolist.dto.UsuarioData;
 import todolist.model.Equipo;
+import todolist.model.Usuario;
 import todolist.repository.EquipoRepository;
+import todolist.repository.UsuarioRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,9 @@ public class EquipoService {
     private EquipoRepository equipoRepository;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
 
     @Transactional
     public EquipoData crearEquipo(String nombre) {
@@ -61,6 +65,42 @@ public class EquipoService {
         // ordenamos la lista por nombre del equipo
         Collections.sort(equiposData, (a, b) -> a.getNombre().compareTo(b.getNombre()));
         return equiposData;
+    }
+
+    @Transactional
+    public List<UsuarioData> usuariosEquipo(Long id) {
+        // recuperamos el equipo
+        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        if (equipo == null) return new ArrayList<>();
+
+        // cambiamos el tipo de la lista de usuarios
+        List<UsuarioData> usuarios = equipo.getUsuarios().stream()
+                .map(usuario -> modelMapper.map(usuario, UsuarioData.class))
+                .collect(Collectors.toList());
+        return usuarios;
+    }
+
+    @Transactional
+    public void añadirUsuarioAEquipo(Long idEquipo, Long idUsuario) {
+        // recuperamos el equipo
+        Equipo equipo = equipoRepository.findById(idEquipo).orElse(null);
+        if (equipo == null) throw new EquipoServiceException("El equipo no existe");
+
+        // recuperamos el usuario
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+        if (usuario == null) throw new EquipoServiceException("El usuario no existe");
+
+        // comprobamos que el usuario no pertenece al equipo
+        if (equipo.getUsuarios().contains(usuario))
+            throw new EquipoServiceException("El usuario ya pertenece al equipo");
+
+        // añadimos el usuario al equipo
+        equipo.addUsuario(usuario);
+        // guardamos el equipo
+        equipoRepository.save(equipo);
+        // guardamos el usuario
+        usuarioRepository.save(usuario);
+        // con ello se guarda la relación
     }
 }
 
