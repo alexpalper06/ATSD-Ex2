@@ -1,6 +1,7 @@
 package todolist.repository;
 
 import todolist.model.Equipo;
+import todolist.model.Usuario;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
@@ -16,6 +17,9 @@ public class EquipoTest {
 
     @Autowired
     private EquipoRepository equipoRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Test
     public void crearEquipo() {
@@ -76,5 +80,34 @@ public class EquipoTest {
         assertThat(equipo1).isEqualTo(equipo2);
         assertThat(equipo2).isNotEqualTo(equipo3);
     }
+
+    @Test
+    @Transactional
+    public void comprobarRelacionBaseDatos() {
+        // GIVEN
+        // Un equipo y un usuario en la BD
+        Equipo equipo = new Equipo("Project 1");
+        equipoRepository.save(equipo);
+
+        Usuario usuario = new Usuario("user@umh");
+        usuarioRepository.save(usuario);
+
+        // WHEN
+        // Añadimos el usuario al equipo
+
+        equipo.addUsuario(usuario);
+
+        // THEN
+        // La relación entre usuario y equipo queda actualizada en BD
+
+        Equipo equipoBD = equipoRepository.findById(equipo.getId()).orElse(null);
+        Usuario usuarioBD = usuarioRepository.findById(usuario.getId()).orElse(null);
+
+        assertThat(equipo.getUsuarios()).hasSize(1);
+        assertThat(equipo.getUsuarios()).contains(usuario);
+        assertThat(usuario.getEquipos()).hasSize(1);
+        assertThat(usuario.getEquipos()).contains(equipo);
+    }
+
 
 }
