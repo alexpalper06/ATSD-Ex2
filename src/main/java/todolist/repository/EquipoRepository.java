@@ -6,7 +6,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import todolist.model.Equipo;
 import todolist.model.Usuario;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 import java.util.Optional;
