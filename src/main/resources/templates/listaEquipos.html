@@ -57,7 +57,7 @@
                             <li th:each="p : ${#numbers.sequence(start, end)}"
                                 th:classappend="${p == currentPage} ? 'active' : ''"
                                 class="page-item">
-                                <a class="page-link" th:if="${p != currentPage}" th:href="@{/registered(page=${p})}" th:text="${p + 1}"></a>
+                                <a class="page-link" th:if="${p != currentPage}" th:href="@{/teams(page=${p})}" th:text="${p + 1}"></a>
                                 <span class="page-link" th:if="${p == currentPage}" th:text="${p + 1}"></span>
                             </li>
 
