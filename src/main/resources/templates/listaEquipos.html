@@ -13,7 +13,7 @@
 
         <div class="row mt-3">
             <div class="col">
-                <div th:if="${equipos != null and equipos.size() > 0}">
+                <div th:if="${teams != null and teams.size() > 0}">
                     <table class="table table-striped" style="table-layout: fixed;">
                         <thead>
                             <tr>
@@ -23,13 +23,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="equipo : ${equipos}">
-                                <td th:text="${equipo.id}" class="text-truncate"></td>
+                            <tr th:each="team : ${teams}">
+                                <td th:text="${team.id}" class="text-truncate"></td>
                                 <td class="text-truncate">
-                                    <a th:href="@{/teams/{id}/members(id=${equipo.id})}" th:text="${equipo.nombre}"></a>
+                                    <a th:href="@{/teams/{id}/members(id=${team.id})}" th:text="${team.nombre}"></a>
                                 </td>
                                 <td>
-                                    <a th:href="@{/teams/{id}/members(id=${equipo.id})}" class="btn btn-primary btn-sm"> View Members </a>
+                                    <a th:href="@{/teams/{id}/members(id=${team.id})}" class="btn btn-primary btn-sm"> View Members </a>
                                 </td>
                             </tr>
                         </tbody>
@@ -73,7 +73,7 @@
                     </nav>
                 </div>
 
-                <div th:if="${equipos == null or equipos.size() == 0}" class="alert alert-warning" role="alert">
+                <div th:if="${teams == null or teams.size() == 0}" class="alert alert-warning" role="alert">
                     <strong>No teams found.</strong> There are no teams created in the system yet.
                 </div>
             </div>
