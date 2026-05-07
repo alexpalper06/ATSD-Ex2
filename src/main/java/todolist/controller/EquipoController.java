@@ -43,12 +43,12 @@ public class EquipoController {
         checkRegisteredUser();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
-
         Page<EquipoData> teamsPage = equipoService.findAllTeamsPreview(pageable);
 
         model.addAttribute("teams", teamsPage.getContent());
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPage", teamsPage.getTotalPages());
+        model.addAttribute("totalPages", teamsPage.getTotalPages());
+        model.addAttribute("totalItems", teamsPage.getTotalElements());
         model.addAttribute("hasNext", teamsPage.hasNext());
         model.addAttribute("hasPrevious", teamsPage.hasPrevious());
 
@@ -56,15 +56,27 @@ public class EquipoController {
     }
 
     @GetMapping("/teams/{id}/members")
-    public String listTeamMembers(@PathVariable Long id, Model model) {
+    public String listTeamMembers(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, Model model) {
         checkRegisteredUser();
 
         EquipoData equipo = equipoService.recuperarEquipo(id);
-
         List<UsuarioData> membersList = equipoService.usuariosEquipo(id);
 
+        // Manual pagination due to the type of the method usuariosEquipo (return List not Page)
+        int totalElements = membersList.size();
+        int totalPages = (totalElements == 0) ? 1 : (int) Math.ceil((double) totalElements / size);
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, totalElements);
+        List<UsuarioData> membersPage = membersList.subList(fromIndex, toIndex);
+
         model.addAttribute("equipo", equipo);
-        model.addAttribute("members", membersList);
+        model.addAttribute("members", membersPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalItems", totalElements);
+        model.addAttribute("hasNext", page < totalPages - 1);
+        model.addAttribute("hasPrevious", page > 0);
+
 
         return "listaMiembrosEquipo";
     }
