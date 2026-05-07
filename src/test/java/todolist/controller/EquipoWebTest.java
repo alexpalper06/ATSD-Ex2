@@ -80,16 +80,20 @@ public class EquipoWebTest {
 
     // /team content tests
     @Test
-    public void testTeamsLinkAppearsInNavbar() throws Exception {
-        // Given
+    public void testTeamsPageHasCorrectTitle() throws Exception {
+        // GIVEN
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
-        Page<EquipoData> emptyPage = new PageImpl<>(new ArrayList<>(), PageRequest.of(0, 10), 0);
+        Page<EquipoData> emptyPage = new PageImpl<>(
+                new ArrayList<>(), PageRequest.of(0, 10), 0);
         when(equipoService.findAllTeamsPreview(any())).thenReturn(emptyPage);
 
-        // When, Then
-        mockMvc.perform(get("/teams").sessionAttr("idUsuarioLogueado", 1L))
+        // WHEN, THEN
+        // La página carga correctamente y contiene el título "Teams"
+        mockMvc.perform(get("/teams")
+                        .sessionAttr("idUsuarioLogeado", 1L))
                 .andExpect(status().isOk())
-                .andExpect(content().string(allOf(containsString("Teams"), containsString("/teams"))));
+                .andExpect(content().string(containsString("Team List")))
+                .andExpect(content().string(containsString("<h2>Teams</h2>")));
     }
 
     @Test
