@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="fragments :: head (titulo='User List')"></head>
+<head th:replace="fragments :: head (titulo='Team Members')"></head>
 
 <body>
     <div th:replace="fragments::navbar"></div>
@@ -32,10 +32,10 @@
                         </thead>
 
                         <tbody>
-                            <tr th:each="miembro : ${miembros}">
-                                <td th:text="${miembro.id}" class="text-truncate"></td>
-                                <td th:text="${miembro.nombre}" class="text-truncate"></td>
-                                <td th:text="${miembro.email}" class="text-truncate"></td>
+                            <tr th:each="member : ${members}">
+                                <td th:text="${member.id}" class="text-truncate"></td>
+                                <td th:text="${member.nombre}" class="text-truncate"></td>
+                                <td th:text="${member.email}" class="text-truncate"></td>
                             </tr>
                         </tbody>
                     </table>
