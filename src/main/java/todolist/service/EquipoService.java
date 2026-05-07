@@ -8,10 +8,11 @@ import todolist.repository.EquipoRepository;
 import todolist.repository.UsuarioRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.List;
@@ -151,6 +152,13 @@ public class EquipoService {
                 .collect(Collectors.toList());
         return equipos;
 
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EquipoData> findAllTeamsPreview(Pageable pageable) {
+        Page<Equipo> equiposPage = equipoRepository.findAll(pageable);
+
+        return equiposPage.map(equipo -> modelMapper.map(equipo, EquipoData.class));
     }
 }
 
