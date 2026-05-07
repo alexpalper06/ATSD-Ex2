@@ -78,6 +78,6 @@ public class EquipoController {
         model.addAttribute("hasPrevious", page > 0);
 
 
-        return "listaMiembrosEquipo";
+        return "listarMiembrosEquipo";
     }
 }
