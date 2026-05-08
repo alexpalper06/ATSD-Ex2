@@ -114,6 +114,10 @@ public class EquipoServiceTest {
         EquipoData equipo = equipoService.crearEquipo("Project 1");
         assertThatThrownBy(() -> equipoService.añadirUsuarioAEquipo(equipo.getId(), 1L))
                 .isInstanceOf(EquipoServiceException.class);
+
+        // Comprobar que crear equipo con nombre duplicado lanza excepcion
+        assertThatThrownBy(() -> equipoService.crearEquipo("Project 1"))
+                .isInstanceOf(EquipoServiceException.class);
     }
 
 
