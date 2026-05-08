@@ -165,4 +165,30 @@ public class EquipoServiceTest {
                 .isInstanceOf(EquipoServiceException.class)
                 .hasMessageContaining("El equipo no existe");
     }
+
+    @Test
+    public void eliminarUsuariDeEquipoActualizaRelacionTest() {
+        // Given
+        UsuarioData usuario1 = new UsuarioData();
+        usuario1.setEmail("user1@umh.es");
+        usuario1.setPassword("1234");
+        usuario1 = usuarioService.registrar(usuario1);
+
+        UsuarioData usuario2 = new UsuarioData();
+        usuario2.setEmail("user2@umh.es");
+        usuario2.setPassword("1234");
+        usuario2 = usuarioService.registrar(usuario2);
+
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario1.getId());
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario2.getId());
+
+        // When
+        equipoService.eliminarUsuarioDeEquipo(equipo.getId(), usuario1.getId());
+
+        // Then
+        List<UsuarioData> usuarios = equipoService.usuariosEquipo(equipo.getId());
+        assertThat(usuarios).hasSize(1);
+        assertThat(usuarios.get(0).getEmail()).isEqualTo("user2@umh.es");
+    }
 }
