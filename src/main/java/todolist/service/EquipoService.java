@@ -190,7 +190,6 @@ public class EquipoService {
         Equipo equipo = equipoRepository.findById(idEquipo)
                 .orElseThrow(() -> new EquipoServiceException("El equipo no existe"));
 
-        // Aquí podrías añadir lógica extra antes de borrar (ej. limpiar tareas)
         equipoRepository.delete(equipo);
     }
 }

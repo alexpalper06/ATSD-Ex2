@@ -116,8 +116,7 @@ public class EquipoServiceTest {
                 .isInstanceOf(EquipoServiceException.class);
     }
 
-    // Change this test to check for decrease in the list when there are multiple users instead
-    // as refactor step
+
     @Test
     public void eliminarUsuarioDeEquipoTest() {
         // Given
