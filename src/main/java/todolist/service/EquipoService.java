@@ -160,5 +160,25 @@ public class EquipoService {
 
         return equiposPage.map(equipo -> modelMapper.map(equipo, EquipoData.class));
     }
+
+    // Methods for user story 009
+    @Transactional
+    public void eliminarUsuarioDeEquipo(Long idEquipo, Long idUsuario) {
+        // Recover the team
+        Equipo equipo = equipoRepository.findById(idEquipo).orElse(null);
+
+        if (equipo == null) {
+            throw new EquipoServiceException("El equipo no existe");
+        }
+
+        // Recover the user
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+        if (usuario == null) {
+            throw new EquipoServiceException("El usuario no existe");
+        }
+
+        // Delete the user from the team updating both sides
+        equipo.removeUsuario(usuario);
+    }
 }
 

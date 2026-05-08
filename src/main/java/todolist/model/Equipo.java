@@ -83,4 +83,11 @@ import java.util.HashSet;
         public int hashCode() {
             return Objects.hash(nombre);
         }
+
+        // removeUsuario for the test from EquipoServiceTest
+        public void removeUsuario(Usuario usuario) {
+            // Update of teams and users
+            this.getUsuarios().remove(usuario);
+            usuario.getEquipos().remove(this);
+        }
 }
