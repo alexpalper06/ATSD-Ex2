@@ -116,9 +116,37 @@ public class EquipoServiceTest {
                 .isInstanceOf(EquipoServiceException.class);
     }
 
-    // New tests
+    // Change this test to check for decrease in the list when there are multiple users instead
+    // as refactor step
     @Test
     public void eliminarUsuarioDeEquipoTest() {
+        // Given
+        // Users added to a team
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("user@umh.es");
+        usuario.setPassword("1234");
+        usuario = usuarioService.registrar(usuario);
+
+        UsuarioData usuario2 = new UsuarioData();
+        usuario2.setEmail("user2@umh.es");
+        usuario2.setPassword("1234");
+        usuario2 = usuarioService.registrar(usuario2);
+
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario.getId());
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario2.getId());
+        // When
+        // The user is deleted from the team
+        equipoService.eliminarUsuarioDeEquipo(equipo.getId(), usuario.getId());
+
+        // Then
+        // The team has no members already
+        List<UsuarioData> usuarios = equipoService.usuariosEquipo(equipo.getId());
+        assertThat(usuarios.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void eliminarUltimoUsuarioEliminaEquipoTest() {
         // Given
         // User added to a team
         UsuarioData usuario = new UsuarioData();
@@ -133,10 +161,9 @@ public class EquipoServiceTest {
         // The user is deleted from the team
         equipoService.eliminarUsuarioDeEquipo(equipo.getId(), usuario.getId());
 
-        // Then
-        // The team has no members already
-        List<UsuarioData> usuarios = equipoService.usuariosEquipo(equipo.getId());
-        assertThat(usuarios).isEmpty();
+        // The team is deleted from the database
+        assertThatThrownBy(()-> equipoService.recuperarEquipo(equipo.getId()))
+                .isInstanceOf(EquipoServiceException.class)
+                .hasMessageContaining("El equipo no existe");
     }
-
 }

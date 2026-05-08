@@ -179,6 +179,19 @@ public class EquipoService {
 
         // Delete the user from the team updating both sides
         equipo.removeUsuario(usuario);
+
+        if (equipo.getUsuarios().isEmpty()) {
+            borrarEquipo(equipo.getId());
+        }
+    }
+
+    @Transactional
+    public void borrarEquipo(Long idEquipo) {
+        Equipo equipo = equipoRepository.findById(idEquipo)
+                .orElseThrow(() -> new EquipoServiceException("El equipo no existe"));
+
+        // Aquí podrías añadir lógica extra antes de borrar (ej. limpiar tareas)
+        equipoRepository.delete(equipo);
     }
 }
 
