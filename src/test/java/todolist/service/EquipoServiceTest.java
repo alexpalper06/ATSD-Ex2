@@ -9,6 +9,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import todolist.model.Equipo;
+
 import java.util.List;
 
 @SpringBootTest
@@ -112,6 +114,29 @@ public class EquipoServiceTest {
         EquipoData equipo = equipoService.crearEquipo("Project 1");
         assertThatThrownBy(() -> equipoService.añadirUsuarioAEquipo(equipo.getId(), 1L))
                 .isInstanceOf(EquipoServiceException.class);
+    }
+
+    // New tests
+    @Test
+    public void eliminarUsuarioDeEquipoTest() {
+        // Given
+        // User added to a team
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("user@umh.es");
+        usuario.setPassword("1234");
+        usuario = usuarioService.registrar(usuario);
+
+        EquipoData equipo = equipoService.crearEquipo("Proyecto 1");
+        equipoService.añadirUsuarioAEquipo(equipo.getId(), usuario.getId());
+
+        // When
+        // The user is deleted from the team
+        equipoService.eliminarUsuarioDeEquipo(equipo.getId(), usuario.getId());
+
+        // Then
+        // The team has no members already
+        List<UsuarioData> usuarios = equipoService.usuariosEquipo(equipo.getId());
+        assertThat(usuarios).isEmpty();
     }
 
 }
