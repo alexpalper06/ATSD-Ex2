@@ -79,6 +79,7 @@ public class EquipoService {
         }
     }
 
+
     @Transactional
     public EquipoData recuperarEquipo(Long id) {
         Equipo equipo = equipoRepository.findById(id).orElse(null);
@@ -159,6 +160,51 @@ public class EquipoService {
         Page<Equipo> equiposPage = equipoRepository.findAll(pageable);
 
         return equiposPage.map(equipo -> modelMapper.map(equipo, EquipoData.class));
+    }
+
+    // Methods for user story 009
+    @Transactional
+    public void eliminarUsuarioDeEquipo(Long idEquipo, Long idUsuario) {
+        // Recover the team
+        Equipo equipo = equipoRepository.findById(idEquipo).orElse(null);
+
+        if (equipo == null) {
+            throw new EquipoServiceException("El equipo no existe");
+        }
+
+        // Recover the user
+        Usuario usuario = usuarioRepository.findById(idUsuario).orElse(null);
+        if (usuario == null) {
+            throw new EquipoServiceException("El usuario no existe");
+        }
+
+        // Delete the user from the team updating both sides
+        equipo.removeUsuario(usuario);
+
+        if (equipo.getUsuarios().isEmpty()) {
+            borrarEquipo(equipo.getId());
+        }
+    }
+
+    @Transactional
+    public void borrarEquipo(Long idEquipo) {
+        Equipo equipo = equipoRepository.findById(idEquipo)
+                .orElseThrow(() -> new EquipoServiceException("El equipo no existe"));
+
+        equipoRepository.delete(equipo);
+    }
+
+    @Transactional
+    public EquipoData crearEquipoConUsuario(String nombre, Long idUsuario) {
+
+        // Crear equipo
+        EquipoData nuevoEquipo = crearEquipo(nombre);
+        // Añadir automaticamente al usuario
+        // Usamos el ID que nos devolvió el metodo anterior y el de la sesión
+        añadirUsuarioAEquipo(nuevoEquipo.getId(), idUsuario);
+
+        // 4. Devolvemos el equipo actualizado (con el usuario ya dentro)
+        return nuevoEquipo;
     }
 }
 
