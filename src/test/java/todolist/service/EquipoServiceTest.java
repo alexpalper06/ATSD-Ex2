@@ -191,4 +191,27 @@ public class EquipoServiceTest {
         assertThat(usuarios).hasSize(1);
         assertThat(usuarios.get(0).getEmail()).isEqualTo("user2@umh.es");
     }
+
+    @Test
+    public void crearEquipoAnyadeUsuarioTest() {
+        // When a new team is created by a user,
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("user@umh.es");
+        usuario.setPassword("1234");
+        usuario = usuarioService.registrar(usuario);
+
+        // Simulates the process where a user creates their team in the web
+        EquipoData equipo = equipoService.crearEquipoConUsuario("Proyecto 1", usuario.getId());
+
+        // THEN
+        // Team is created
+        EquipoData equipoBd = equipoService.recuperarEquipo(equipo.getId());
+        assertThat(equipoBd).isNotNull();
+        assertThat(equipoBd.getNombre()).isEqualTo("Proyecto 1");
+
+        // The user pertains to the team
+        List<UsuarioData> usuarios = equipoService.usuariosEquipo(equipo.getId());
+        assertThat(usuarios).hasSize(1);
+        assertThat(usuarios.get(0).getEmail()).isEqualTo("user@umh.es");
+    }
 }

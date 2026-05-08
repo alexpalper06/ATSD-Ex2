@@ -79,6 +79,7 @@ public class EquipoService {
         }
     }
 
+
     @Transactional
     public EquipoData recuperarEquipo(Long id) {
         Equipo equipo = equipoRepository.findById(id).orElse(null);
@@ -191,6 +192,19 @@ public class EquipoService {
                 .orElseThrow(() -> new EquipoServiceException("El equipo no existe"));
 
         equipoRepository.delete(equipo);
+    }
+
+    @Transactional
+    public EquipoData crearEquipoConUsuario(String nombre, Long idUsuario) {
+
+        // Crear equipo
+        EquipoData nuevoEquipo = crearEquipo(nombre);
+        // Añadir automaticamente al usuario
+        // Usamos el ID que nos devolvió el metodo anterior y el de la sesión
+        añadirUsuarioAEquipo(nuevoEquipo.getId(), idUsuario);
+
+        // 4. Devolvemos el equipo actualizado (con el usuario ya dentro)
+        return nuevoEquipo;
     }
 }
 
