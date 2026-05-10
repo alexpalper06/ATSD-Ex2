@@ -19,6 +19,7 @@ import todolist.dto.EquipoData;
 import todolist.dto.EquipoDetalleData;
 import todolist.dto.UsuarioData;
 import todolist.service.EquipoService;
+import todolist.service.EquipoServiceException;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
