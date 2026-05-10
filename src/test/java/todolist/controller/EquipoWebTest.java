@@ -352,4 +352,50 @@ public class EquipoWebTest {
                 .andExpect(content().string(not(containsString("user1@umh.es"))))
                 .andExpect(content().string(not(containsString("user10@umh.es"))));
     }
+
+        @Test
+        public void testJoinButtonPresence() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        EquipoData equipo = crearEquipo(1L, "Proyecto 1");
+        equipo.setUsuarios(Arrays.asList(crearUsuario(10L, "user1", "user1@umh.es")));
+        when(equipoService.recuperarEquipo(1L)).thenReturn(equipo);
+        when(equipoService.usuariosEquipo(1L)).thenReturn(equipo.getUsuarios());
+
+        mockMvc.perform(get("/teams/1")
+                .sessionAttr("idUsuarioLogeado", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Join Team")));
+        }
+
+        @Test
+        public void testLeaveButtonPresence() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        EquipoData equipo = crearEquipo(1L, "Proyecto 1");
+        UsuarioData currentUser = crearUsuario(1L, "Current User", "current@umh.es");
+        equipo.setUsuarios(Arrays.asList(currentUser));
+        when(equipoService.recuperarEquipo(1L)).thenReturn(equipo);
+        when(equipoService.usuariosEquipo(1L)).thenReturn(equipo.getUsuarios());
+
+        mockMvc.perform(get("/teams/1")
+                .sessionAttr("idUsuarioLogeado", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Leave Team")));
+        }
+
+        @Test
+        public void testPostMembershipRedirectsCorrectlyWhenTeamDeleted() throws Exception {
+        when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+        EquipoData equipo = crearEquipo(1L, "Proyecto 1");
+        UsuarioData currentUser = crearUsuario(1L, "Current User", "current@umh.es");
+        equipo.setUsuarios(Arrays.asList(currentUser));
+
+        when(equipoService.usuariosEquipo(1L)).thenReturn(Arrays.asList(currentUser));
+        when(equipoService.recuperarEquipo(1L))
+                .thenThrow(new RuntimeException("El equipo no existe"));
+
+        mockMvc.perform(post("/teams/1/usuarios")
+                .sessionAttr("idUsuarioLogeado", 1L))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/teams"));
+        }
 }
