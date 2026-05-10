@@ -107,4 +107,44 @@ public class EquipoController {
         }
     }
 
+    
+    @GetMapping("/teams/{id}")
+    public String detalleEquipo(@PathVariable Long id, Model model, HttpSession session) {
+        checkRegisteredUser();
+
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        EquipoData equipo = equipoService.recuperarEquipo(id);
+        List<UsuarioData> usuarios = equipoService.usuariosEquipo(id);
+        equipo.setUsuarios(usuarios);
+
+        model.addAttribute("equipo", equipo);
+        model.addAttribute("currentUserId", idUsuario);
+        //model.addAttribute("isMember", usuarios.stream().anyMatch(u -> u.getId().equals(idUsuario)));
+        model.addAttribute("isMember", equipoService.esUsuarioMiembro(idUsuario, id));
+        return "detalleEquipo";
+    }
+
+    @PostMapping("/teams/{id}/usuarios")
+    public String gestionarMiembroEquipo(@PathVariable Long id) {
+        checkRegisteredUser();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+
+        List<UsuarioData> usuarios = equipoService.usuariosEquipo(id);
+        //boolean isMember = usuarios.stream().anyMatch(u -> u.getId().equals(idUsuario));
+        boolean isMember = equipoService.esUsuarioMiembro(idUsuario, id);
+
+        if (isMember) {
+            equipoService.eliminarUsuarioDeEquipo(id, idUsuario);
+            try {
+                equipoService.recuperarEquipo(id);
+                return "redirect:/teams/" + id;
+            } catch (Exception e) {
+                // Team was deleted (e.g., last member left)
+                return "redirect:/teams";
+            }
+        } else {
+            equipoService.añadirUsuarioAEquipo(id, idUsuario);
+            return "redirect:/teams/" + id;
+        }
+    }
 }
