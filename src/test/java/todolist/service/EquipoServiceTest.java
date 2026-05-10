@@ -246,4 +246,20 @@ public class EquipoServiceTest {
         assertThat(equipoService.esUsuarioMiembro(usuario2.getId(), equipoBd.getId())).isFalse();
 
     }
+
+     @Test
+    public void recuperarDetallesEquipoTest() {
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("user@umh.es");
+        usuario.setPassword("1234");
+        usuario = usuarioService.registrar(usuario);
+
+
+        // Simulates the process where a user creates their team in the web
+        EquipoData equipo = equipoService.crearEquipoConUsuario("Proyecto 1", usuario.getId());
+        EquipoDetalleData equipoDetalle = equipoService.recuperarEquipoDetalle(equipo.getId());
+        assertThat(equipoDetalle).isNotNull();
+        assertThat(equipoDetalle.getNombre()).isEqualTo("Proyecto 1");
+        assertThat(equipoDetalle.getUsuarios()).hasSize(1);
+    }
 }
