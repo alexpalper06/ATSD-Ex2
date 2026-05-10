@@ -206,5 +206,10 @@ public class EquipoService {
         // 4. Devolvemos el equipo actualizado (con el usuario ya dentro)
         return nuevoEquipo;
     }
+
+    @Transactional
+    public boolean esUsuarioMiembro(Long usuarioId, Long equipoId) {
+        return equipoRepository.existsByUsuariosIdAndId(usuarioId, equipoId);
+    }
 }
 
