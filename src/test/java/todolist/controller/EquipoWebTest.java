@@ -56,7 +56,7 @@ public class EquipoWebTest {
         equipo.setId(id);
         equipo.setNombre(nombre);
 
-        UserData member1 = new UsuarioData(1L, "user1", "user1@umh.es");
+        UsuarioData member1 = crearUsuario(1L, "user1", "user1@umh.es");
         equipo.setUsuarios(Set.of(member1));
 
         return equipo;
