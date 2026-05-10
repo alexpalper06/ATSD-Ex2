@@ -80,4 +80,31 @@ public class EquipoController {
 
         return "listarMiembrosEquipo";
     }
+
+   
+    @GetMapping("/teams/new")
+    public String nuevoEquipo(Model model) {
+        checkRegisteredUser();
+        model.addAttribute("equipoData", new EquipoData());
+        return "nuevoEquipo";
+    }
+
+    @PostMapping("/teams/new")
+    public String crearEquipo(@ModelAttribute EquipoData equipoData,
+                             Model model, RedirectAttributes flash,
+                             HttpSession session) {
+        checkRegisteredUser();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        
+        try {
+            equipoService.crearEquipoConUsuario(equipoData.getNombre(), idUsuario);
+            return "redirect:/teams";
+        } catch (EquipoServiceException e) {
+            // Add the error message to the model to display it in the view
+            model.addAttribute("error", e.getMessage());
+            // Return the name of the template (replace with your actual template name, e.g., "formNuevoEquipo")
+            return "formNuevoEquipo"; 
+        }
+    }
+
 }
