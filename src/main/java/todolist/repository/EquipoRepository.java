@@ -17,4 +17,7 @@ public interface EquipoRepository extends PagingAndSortingRepository<Equipo, Lon
     public List<Equipo> findAll();
 
     public Page<Equipo> findAll(Pageable pageable);
+
+    // Looks for User ID and Team ID
+    boolean existsByUsuariosIdAndId(Long usuarioId, Long equipoId);
 }
