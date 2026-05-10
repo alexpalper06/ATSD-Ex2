@@ -373,6 +373,7 @@ public class EquipoWebTest {
                 when(managerUserSession.usuarioLogeado()).thenReturn(1L);
                 EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto 1");
                 when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
+                when(equipoService.esUsuarioMiembro(1L, 1L)).thenReturn(false);
 
                 mockMvc.perform(get("/teams/1")
                         .sessionAttr("idUsuarioLogeado", 1L))
@@ -385,6 +386,7 @@ public class EquipoWebTest {
                 when(managerUserSession.usuarioLogeado()).thenReturn(1L);
                 EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto 1");
                 when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
+                when(equipoService.esUsuarioMiembro(1L, 1L)).thenReturn(true);
 
                 mockMvc.perform(get("/teams/1")
                         .sessionAttr("idUsuarioLogeado", 1L))
