@@ -10,14 +10,20 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import todolist.authentication.ManagerUserSession;
 import todolist.controller.exception.AccesoNoAutorizadoException;
 import todolist.dto.EquipoData;
+import todolist.dto.EquipoDetalleData;
 import todolist.dto.UsuarioData;
 import todolist.service.EquipoService;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 public class EquipoController {
@@ -98,13 +104,14 @@ public class EquipoController {
         
         try {
             equipoService.crearEquipoConUsuario(equipoData.getNombre(), idUsuario);
-            return "redirect:/teams";
         } catch (EquipoServiceException e) {
             // Add the error message to the model to display it in the view
             model.addAttribute("error", e.getMessage());
             // Return the name of the template (replace with your actual template name, e.g., "formNuevoEquipo")
-            return "formNuevoEquipo"; 
+            return "nuevoEquipo"; 
         }
+
+        return "redirect:/teams";
     }
 
     
@@ -113,9 +120,8 @@ public class EquipoController {
         checkRegisteredUser();
 
         Long idUsuario = managerUserSession.usuarioLogeado();
-        EquipoData equipo = equipoService.recuperarEquipo(id);
-        List<UsuarioData> usuarios = equipoService.usuariosEquipo(id);
-        equipo.setUsuarios(usuarios);
+        //EquipoData equipo = equipoService.recuperarEquipo(id);
+        EquipoDetalleData equipo = equipoService.recuperarEquipoDetalle(id);
 
         model.addAttribute("equipo", equipo);
         model.addAttribute("currentUserId", idUsuario);
@@ -124,7 +130,7 @@ public class EquipoController {
         return "detalleEquipo";
     }
 
-    @PostMapping("/teams/{id}/usuarios")
+    @PostMapping("/teams/{id}")
     public String gestionarMiembroEquipo(@PathVariable Long id) {
         checkRegisteredUser();
         Long idUsuario = managerUserSession.usuarioLogeado();

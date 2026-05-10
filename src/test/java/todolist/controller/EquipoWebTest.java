@@ -393,7 +393,7 @@ public class EquipoWebTest {
         when(equipoService.recuperarEquipo(1L))
                 .thenThrow(new RuntimeException("El equipo no existe"));
 
-        mockMvc.perform(post("/teams/1/usuarios")
+        mockMvc.perform(post("/teams/1")
                 .sessionAttr("idUsuarioLogeado", 1L))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/teams"));
