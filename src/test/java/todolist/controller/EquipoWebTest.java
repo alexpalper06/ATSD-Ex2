@@ -394,6 +394,90 @@ public class EquipoWebTest {
                         .andExpect(content().string(containsString("Leave Team")));
         }
 
+        @Test
+        public void testAdminSeesRenameAndDeleteButtons() throws Exception {
+                when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+                EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto 1");
+                when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
+                when(equipoService.esUsuarioMiembro(1L, 1L)).thenReturn(true);
+                when(managerUserSession.isAdmin()).thenReturn(true);
+
+                mockMvc.perform(get("/teams/1")
+                        .sessionAttr("idUsuarioLogeado", 1L))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(containsString("Rename Team")))
+                        .andExpect(content().string(containsString("Delete Team")));
+        }
+
+        @Test
+        public void testNonAdminDoesNotSeeAdminButtons() throws Exception {
+                when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+                EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto 1");
+                when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
+                when(equipoService.esUsuarioMiembro(1L, 1L)).thenReturn(false);
+                when(managerUserSession.isAdmin()).thenReturn(false);
+
+                mockMvc.perform(get("/teams/1")
+                        .sessionAttr("idUsuarioLogeado", 1L))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(not(containsString("Rename Team"))))
+                        .andExpect(content().string(not(containsString("Delete Team"))));
+        }
+
+        @Test
+        public void testGuestCannotAccessEditForm() throws Exception {
+                when(managerUserSession.usuarioLogeado()).thenReturn(null);
+
+                mockMvc.perform(get("/teams/1/edit"))
+                        .andExpect(status().isForbidden());
+        }
+
+        @Test
+        public void testNonAdminCannotAccessEditForm() throws Exception {
+                when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+                when(managerUserSession.isAdmin()).thenReturn(false);
+
+                mockMvc.perform(get("/teams/1/edit")
+                        .sessionAttr("idUsuarioLogeado", 1L))
+                        .andExpect(status().isForbidden());
+        }
+
+        @Test
+        public void testAdminCanAccessEditForm() throws Exception {
+                when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+                when(managerUserSession.isAdmin()).thenReturn(true);
+                when(equipoService.recuperarEquipo(1L)).thenReturn(crearEquipo(1L, "Proyecto 1"));
+
+                mockMvc.perform(get("/teams/1/edit")
+                        .sessionAttr("idUsuarioLogeado", 1L))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(containsString("Rename Team")))
+                        .andExpect(content().string(containsString("Save Changes")));
+        }
+
+        @Test
+        public void testPostRenameRedirectsToTeamDetail() throws Exception {
+                when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+                when(managerUserSession.isAdmin()).thenReturn(true);
+
+                mockMvc.perform(post("/teams/1/edit")
+                        .sessionAttr("idUsuarioLogeado", 1L)
+                        .param("nombre", "Nuevo Nombre"))
+                        .andExpect(status().is3xxRedirection())
+                        .andExpect(redirectedUrl("/teams/1"));
+        }
+
+        @Test
+        public void testPostDeleteRedirectsToTeamList() throws Exception {
+                when(managerUserSession.usuarioLogeado()).thenReturn(1L);
+                when(managerUserSession.isAdmin()).thenReturn(true);
+
+                mockMvc.perform(post("/teams/1/delete")
+                        .sessionAttr("idUsuarioLogeado", 1L))
+                        .andExpect(status().is3xxRedirection())
+                        .andExpect(redirectedUrl("/teams"));
+        }
+
         /*
         @Test
         public void testPostMembershipRedirectsCorrectlyWhenTeamDeleted() throws Exception {

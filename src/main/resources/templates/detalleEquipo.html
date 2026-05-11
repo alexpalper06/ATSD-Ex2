@@ -46,6 +46,12 @@
                         <button th:unless="${isMember}" type="submit" class="btn btn-success">Join Team</button>
                     </th:block>
                 </form>
+                <th:block th:if="${@managerUserSession.isAdmin()}">
+                    <a th:href="@{/teams/{id}/edit(id=${equipo.id})}" class="btn btn-warning">Rename Team</a>
+                    <form method="POST" th:action="@{/teams/{id}/delete(id=${equipo.id})}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this team?');">
+                        <button type="submit" class="btn btn-danger">Delete Team</button>
+                    </form>
+                </th:block>
                 <a th:href="@{/teams}" class="btn btn-secondary">Back to Teams</a>
             </div>
         </div>
