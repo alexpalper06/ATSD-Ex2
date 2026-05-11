@@ -187,4 +187,17 @@ public class EquipoController {
             return "editarEquipo";
         }
     }
+    
+    @PostMapping("/teams/{id}/delete")
+    public String eliminarEquipo(@PathVariable Long id) {
+        checkRegisteredUser();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+
+        if (!managerUserSession.isAdmin()) {
+            throw new AccesoNoAutorizadoException();
+        }
+
+        equipoService.eliminarEquipo(id);
+        return "redirect:/teams";
+    }
 }
