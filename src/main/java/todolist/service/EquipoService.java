@@ -232,6 +232,13 @@ public class EquipoService {
         return equipoRepository.existsByUsuariosIdAndId(usuarioId, equipoId);
     }
 
-    
+    @Transactional
+    public void renombrarEquipo(Long id, String nuevoNombre) {
+        Equipo equipo = equipoRepository.findById(id)
+                .orElseThrow(() -> new EquipoServiceException("El equipo no existe"));
+        equipo.setNombre(nuevoNombre);
+        equipoRepository.save(equipo);
+    }
+
 }
 
