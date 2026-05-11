@@ -154,4 +154,37 @@ public class EquipoController {
             return "redirect:/teams/" + id;
         }
     }
+
+    @GetMapping("/teams/{id}/edit")
+    public String editarEquipo(@PathVariable Long id, Model model) {
+        checkRegisteredUser();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+
+        if (!managerUserSession.isAdmin()) {
+            throw new AccesoNoAutorizadoException();
+        }
+
+        EquipoData equipo = equipoService.recuperarEquipo(id);
+        model.addAttribute("equipoData", equipo);
+        return "editarEquipo";
+    }
+
+    @PostMapping("/teams/{id}/edit")
+    public String actualizarEquipo(@PathVariable Long id, @ModelAttribute EquipoData equipoData, Model model) {
+        checkRegisteredUser();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+
+        if (!managerUserSession.isAdmin()) {
+            throw new AccesoNoAutorizadoException();
+        }
+
+        try {
+            equipoService.renombrarEquipo(id, equipoData.getNombre());
+            return "redirect:/teams/" + id;
+        } catch (EquipoServiceException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("equipoData", equipoData);
+            return "editarEquipo";
+        }
+    }
 }
