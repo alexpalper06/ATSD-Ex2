@@ -131,7 +131,7 @@ public class EquipoController {
         return "detalleEquipo";
     }
 
-    @PostMapping("/teams/{id}")
+    @PostMapping("/teams/{id}/usuarios")
     public String gestionarMiembroEquipo(@PathVariable Long id) {
         checkRegisteredUser();
         Long idUsuario = managerUserSession.usuarioLogeado();
