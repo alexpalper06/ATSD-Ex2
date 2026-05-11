@@ -111,6 +111,10 @@ public class EquipoServiceTest {
                 .isInstanceOf(EquipoServiceException.class);
         assertThatThrownBy(() -> equipoService.equiposUsuario(1L))
                 .isInstanceOf(EquipoServiceException.class);
+        assertThatThrownBy(() -> equipoService.renombrarEquipo(1L, "New Project 1 3DS"))
+                .isInstanceOf(EquipoServiceException.class);
+        assertThatThrownBy(() -> equipoService.eliminarEquipo(1L))
+                .isInstanceOf(EquipoServiceException.class);
 
         // Creamos un equipo pero no un usuario
         // y comprobamos que también se lanza una excepción
@@ -264,5 +268,40 @@ public class EquipoServiceTest {
         assertThat(equipoDetalle).isNotNull();
         assertThat(equipoDetalle.getNombre()).isEqualTo("Proyecto 1");
         assertThat(equipoDetalle.getUsuarios()).hasSize(1);
+    }
+
+    @Test
+    public void renombrarEquipoTest() {
+        // GIVEN
+        // Un equipo en la base de datos
+        EquipoData equipo = equipoService.crearEquipo("Proyecto Original");
+        Long equipoId = equipo.getId();
+
+        // WHEN
+        // Renombramos el equipo
+        equipoService.renombrarEquipo(equipoId, "Proyecto Actualizado");
+
+        // THEN
+        // Recuperamos el equipo y verificamos que el nombre cambió
+        EquipoData equipoActualizado = equipoService.recuperarEquipo(equipoId);
+        assertThat(equipoActualizado.getNombre()).isEqualTo("Proyecto Actualizado");
+    }
+
+        @Test
+    public void eliminarEquipoTest() {
+        // GIVEN
+        // Un equipo en la base de datos
+        EquipoData equipo = equipoService.crearEquipo("Proyecto a Eliminar");
+        Long equipoId = equipo.getId();
+
+        // WHEN
+        // Eliminamos el equipo
+        equipoService.eliminarEquipo(equipoId);
+
+        // THEN
+        // Verificamos que el equipo ya no existe
+        assertThatThrownBy(() -> equipoService.recuperarEquipo(equipoId))
+                .isInstanceOf(EquipoServiceException.class)
+                .hasMessageContaining("El equipo no existe");
     }
 }

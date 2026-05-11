@@ -125,4 +125,45 @@ public class EquipoTest {
         assertThat(equipos).hasSize(2);
     }
 
+    @Test
+    @Transactional
+    public void guardarActualizaNombreTest() {
+        // GIVEN
+        // Un equipo nuevo
+        Equipo equipo = new Equipo("Project P1");
+
+        // WHEN
+        // Salvamos el equipo en la base de datos
+        equipoRepository.save(equipo);
+        Long equipoId = equipo.getId();
+
+        // Cambiar el nombre
+        equipo.setNombre("Project P1 Updated");
+        equipoRepository.save(equipo);
+
+        // THEN
+        // Recuperamos el equipo de la BD y verificamos que el nombre se actualizó
+        Equipo equipoDB = equipoRepository.findById(equipoId).orElse(null);
+        assertThat(equipoDB).isNotNull();
+        assertThat(equipoDB.getNombre()).isEqualTo("Project P1 Updated");
+    }
+
+       @Test
+    @Transactional
+    public void eliminarEquipoTest() {
+        // GIVEN
+        // Un equipo en la base de datos
+        Equipo equipo = new Equipo("Project P1");
+        equipoRepository.save(equipo);
+        Long equipoId = equipo.getId();
+
+        // WHEN
+        // Eliminamos el equipo
+        equipoRepository.deleteById(equipoId);
+
+        // THEN
+        // Verificamos que findById retorna vacío
+        assertThat(equipoRepository.findById(equipoId)).isEmpty();
+    }
+
 }
