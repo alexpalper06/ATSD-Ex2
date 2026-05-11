@@ -148,5 +148,22 @@ public class EquipoTest {
         assertThat(equipoDB.getNombre()).isEqualTo("Project P1 Updated");
     }
 
+       @Test
+    @Transactional
+    public void eliminarEquipoTest() {
+        // GIVEN
+        // Un equipo en la base de datos
+        Equipo equipo = new Equipo("Project P1");
+        equipoRepository.save(equipo);
+        Long equipoId = equipo.getId();
+
+        // WHEN
+        // Eliminamos el equipo
+        equipoRepository.deleteById(equipoId);
+
+        // THEN
+        // Verificamos que findById retorna vacío
+        assertThat(equipoRepository.findById(equipoId)).isEmpty();
+    }
 
 }

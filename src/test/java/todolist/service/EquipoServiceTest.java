@@ -113,7 +113,8 @@ public class EquipoServiceTest {
                 .isInstanceOf(EquipoServiceException.class);
         assertThatThrownBy(() -> equipoService.renombrarEquipo(1L, "New Project 1 3DS"))
                 .isInstanceOf(EquipoServiceException.class);
-  
+        assertThatThrownBy(() -> equipoService.eliminarEquipo(1L))
+                .isInstanceOf(EquipoServiceException.class);
 
         // Creamos un equipo pero no un usuario
         // y comprobamos que también se lanza una excepción
@@ -286,5 +287,21 @@ public class EquipoServiceTest {
         assertThat(equipoActualizado.getNombre()).isEqualTo("Proyecto Actualizado");
     }
 
+        @Test
+    public void eliminarEquipoTest() {
+        // GIVEN
+        // Un equipo en la base de datos
+        EquipoData equipo = equipoService.crearEquipo("Proyecto a Eliminar");
+        Long equipoId = equipo.getId();
 
+        // WHEN
+        // Eliminamos el equipo
+        equipoService.eliminarEquipo(equipoId);
+
+        // THEN
+        // Verificamos que el equipo ya no existe
+        assertThatThrownBy(() -> equipoService.recuperarEquipo(equipoId))
+                .isInstanceOf(EquipoServiceException.class)
+                .hasMessageContaining("El equipo no existe");
+    }
 }

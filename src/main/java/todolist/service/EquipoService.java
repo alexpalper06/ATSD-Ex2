@@ -240,5 +240,14 @@ public class EquipoService {
         equipoRepository.save(equipo);
     }
 
+
+    @Transactional
+    public void eliminarEquipo(Long id) {
+        Equipo equipo = equipoRepository.findById(id)
+                .orElseThrow(() -> new EquipoServiceException("El equipo no existe"));
+        equipoRepository.deleteById(id);
+    }
+
+
 }
 
