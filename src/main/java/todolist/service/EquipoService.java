@@ -1,6 +1,7 @@
 package todolist.service;
 
 import todolist.dto.EquipoData;
+import todolist.dto.EquipoDetalleData;
 import todolist.dto.UsuarioData;
 import todolist.model.Equipo;
 import todolist.model.Usuario;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 @Service
 public class EquipoService {
@@ -86,6 +88,24 @@ public class EquipoService {
         if (equipo == null)
             throw new EquipoServiceException("El equipo no existe");
         return modelMapper.map(equipo, EquipoData.class);
+    }
+
+    @Transactional
+    public EquipoDetalleData recuperarEquipoDetalle(Long id) {
+        Equipo equipo = equipoRepository.findById(id).orElse(null);
+        if (equipo == null)
+            throw new EquipoServiceException("El equipo no existe");
+        
+        // Map directly to DetalleData
+        EquipoDetalleData equipoDTO = modelMapper.map(equipo, EquipoDetalleData.class);
+        
+        // Convert the List of users to a Set for the DTO
+        Set<UsuarioData> usuarios = equipo.getUsuarios().stream()
+                .map(u -> modelMapper.map(u, UsuarioData.class))
+                .collect(Collectors.toSet());
+                
+        equipoDTO.setUsuarios(usuarios);
+        return equipoDTO;
     }
 
     @Transactional
@@ -211,5 +231,7 @@ public class EquipoService {
     public boolean esUsuarioMiembro(Long usuarioId, Long equipoId) {
         return equipoRepository.existsByUsuariosIdAndId(usuarioId, equipoId);
     }
+
+    
 }
 

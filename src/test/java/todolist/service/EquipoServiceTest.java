@@ -3,9 +3,12 @@ package todolist.service;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import todolist.dto.EquipoData;
+import todolist.dto.EquipoDetalleData;
 import todolist.dto.UsuarioData;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.containsString;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -245,5 +248,21 @@ public class EquipoServiceTest {
         assertThat(equipoService.esUsuarioMiembro(usuario.getId(), equipoBd.getId())).isTrue();
         assertThat(equipoService.esUsuarioMiembro(usuario2.getId(), equipoBd.getId())).isFalse();
 
+    }
+
+     @Test
+    public void recuperarDetallesEquipoTest() {
+        UsuarioData usuario = new UsuarioData();
+        usuario.setEmail("user@umh.es");
+        usuario.setPassword("1234");
+        usuario = usuarioService.registrar(usuario);
+
+
+        // Simulates the process where a user creates their team in the web
+        EquipoData equipo = equipoService.crearEquipoConUsuario("Proyecto 1", usuario.getId());
+        EquipoDetalleData equipoDetalle = equipoService.recuperarEquipoDetalle(equipo.getId());
+        assertThat(equipoDetalle).isNotNull();
+        assertThat(equipoDetalle.getNombre()).isEqualTo("Proyecto 1");
+        assertThat(equipoDetalle.getUsuarios()).hasSize(1);
     }
 }

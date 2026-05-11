@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Team Details')"></head>
+<body>
+    <div th:replace="fragments::navbar"></div>
+    <div class="container-fluid">
+
+        <div class="row mt-3">
+            <div class="col">
+                <h2 th:text="${equipo.nombre}"></h2>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col">
+                <h4>Team Members</h4>
+                <div th:if="${equipo.usuarios != null and equipo.usuarios.size() > 0}">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="usuario : ${equipo.usuarios}">
+                                <td th:text="${usuario.nombre}"></td>
+                                <td th:text="${usuario.email}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:if="${equipo.usuarios == null or equipo.usuarios.size() == 0}" class="alert alert-warning" role="alert">
+                    <strong>No members found.</strong> This team has no members yet.
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col">
+                <form method="POST" th:action="@{/teams/{id}/usuarios(id=${equipo.id})}" style="display: inline;">
+                    <!-- isMember should be sent from the controller using the service layer to retrieve the value -->
+                    <!-- <th:block th:with="isMember=${equipo.usuarios != null and equipo.usuarios.?[id == #vars.currentUserId].size() > 0}">-->
+                    <th:block>
+                        <button th:if="${isMember}" type="submit" class="btn btn-danger">Leave Team</button>
+                        <button th:unless="${isMember}" type="submit" class="btn btn-success">Join Team</button>
+                    </th:block>
+                </form>
+                <a th:href="@{/teams}" class="btn btn-secondary">Back to Teams</a>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="fragments :: javascript"></div>
+</body>
+</html>
