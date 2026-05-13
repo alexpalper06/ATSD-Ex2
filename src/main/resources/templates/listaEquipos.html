@@ -30,10 +30,10 @@
                             <tr th:each="team : ${teams}">
                                 <td th:text="${team.id}" class="text-truncate"></td>
                                 <td class="text-truncate">
-                                    <a th:href="@{/teams/{id}/members(id=${team.id})}" th:text="${team.nombre}"></a>
+                                    <a th:href="@{/teams/{id}(id=${team.id})}" th:text="${team.nombre}"></a>
                                 </td>
                                 <td>
-                                    <a th:href="@{/teams/{id}/members(id=${team.id})}" class="btn btn-primary btn-sm"> View Members </a>
+                                    <a th:href="@{/teams/{id}(id=${team.id})}" class="btn btn-primary btn-sm"> View Members </a>
                                 </td>
                             </tr>
                         </tbody>
