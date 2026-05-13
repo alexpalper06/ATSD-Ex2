@@ -151,7 +151,7 @@ public class EquipoWebTest {
     @Test
     public void testTeamNameIsLinkToMembers() throws Exception {
         // Given
-        Page<EquipoData> page = new PageImpl<>(Collections.singletonList(crearEquipo(1L, "Proyecto Alpha")),
+        Page<EquipoData> page = new PageImpl<>(Collections.singletonList(crearEquipo(1L, "Proyecto 1")),
                 PageRequest.of(0, 10), 1);
 
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
@@ -161,7 +161,7 @@ public class EquipoWebTest {
         mockMvc.perform(get("/teams").sessionAttr("idUsuarioLogeado", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().string(allOf(
-                        containsString("Proyecto Alpha"), containsString("/teams/1/members")
+                        containsString("Proyecto 1"), containsString("/teams/1")
                 )));
     }
 
@@ -224,15 +224,17 @@ public class EquipoWebTest {
     }
 
 
-    // Acces tests to /teams/{id}/members
+    // Acces tests to /teams/{id}
     @Test
     public void testGuestAccessToMembersIsForbidden() throws Exception {
         // Given
         // No hay usuario logueado
         when(managerUserSession.usuarioLogeado()).thenReturn(null);
+        EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto 1");
+        when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
 
         // When, Then
-        mockMvc.perform(get("/teams/1/members"))
+        mockMvc.perform(get("/teams/1"))
                 .andExpect(status().isForbidden());
     }
 
@@ -240,11 +242,13 @@ public class EquipoWebTest {
     public void testLoggedInUserCanAccessMembers() throws Exception {
         // Given
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
-        when(equipoService.recuperarEquipo(1L)).thenReturn(crearEquipo(1L, "Proyecto Alpha"));
-        when(equipoService.usuariosEquipo(1L)).thenReturn(new ArrayList<>());
+        EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto 1");
+        when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
+        when(equipoService.esUsuarioMiembro(1L, 1L)).thenReturn(false);
+        
 
         // When, Then
-        mockMvc.perform(get("/teams/1/members")
+        mockMvc.perform(get("/teams/1")
                         .sessionAttr("idUsuarioLogeado", 1L))
                 .andExpect(status().isOk());
     }
@@ -253,16 +257,17 @@ public class EquipoWebTest {
     public void testMembersPageShowsTeamName() throws Exception {
         // Given
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
-        when(equipoService.recuperarEquipo(1L)).thenReturn(crearEquipo(1L, "Proyecto Alpha"));
-        when(equipoService.usuariosEquipo(1L)).thenReturn(new ArrayList<>());
+        EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto 1");
+        when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
+        when(equipoService.esUsuarioMiembro(1L, 1L)).thenReturn(false);
 
         // When, Then
         // El nombre del equipo debe aparecer en el título de la página,
         // extraído de ${equipo.nombre} en listaMiembrosEquipo.html
-        mockMvc.perform(get("/teams/1/members")
+        mockMvc.perform(get("/teams/1")
                         .sessionAttr("idUsuarioLogeado", 1L))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Proyecto Alpha")));
+                .andExpect(content().string(containsString("Proyecto 1")));
     }
 
     @Test
@@ -270,16 +275,19 @@ public class EquipoWebTest {
         // Given
         // Un equipo con dos miembros
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
-        when(equipoService.recuperarEquipo(1L)).thenReturn(crearEquipo(1L, "Proyecto Alpha"));
-        when(equipoService.usuariosEquipo(1L)).thenReturn(Arrays.asList(
+        EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto 1");
+        equipo.setUsuarios(Set.of(
                 crearUsuario(10L, "Alice", "alice@umh.es"),
                 crearUsuario(11L, "Bob", "bob@umh.es")
         ));
 
+        when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
+        when(equipoService.esUsuarioMiembro(1L, 1L)).thenReturn(false);
+
         // When, Then
         // El HTML debe mostrar el nombre y email de cada miembro,
         // extraídos de ${member.nombre} y ${member.email} en la vista
-        mockMvc.perform(get("/teams/1/members")
+        mockMvc.perform(get("/teams/1")
                         .sessionAttr("idUsuarioLogeado", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().string(allOf(
@@ -295,18 +303,25 @@ public class EquipoWebTest {
         // GIVEN
         // Un equipo sin miembros
         when(managerUserSession.usuarioLogeado()).thenReturn(1L);
-        when(equipoService.recuperarEquipo(1L)).thenReturn(crearEquipo(1L, "Proyecto Vacío"));
-        when(equipoService.usuariosEquipo(1L)).thenReturn(new ArrayList<>());
+        EquipoDetalleData equipo = crearEquipoDetalle(1L, "Proyecto Vacío");
+        equipo.setUsuarios(Set.of()); // Sin miembros
+        when(equipoService.recuperarEquipoDetalle(1L)).thenReturn(equipo);
+        when(equipoService.esUsuarioMiembro(1L, 1L)).thenReturn(false);
 
         // WHEN, THEN
         // La vista debe mostrar el mensaje de alerta definido en el bloque
         // th:if="${members == null or members.size() == 0}" de listaMiembrosEquipo.html
-        mockMvc.perform(get("/teams/1/members")
+        mockMvc.perform(get("/teams/1")
                         .sessionAttr("idUsuarioLogeado", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("No members found.")));
     }
 
+    /*
+    These methods are for /members pagination tests. They are currently commented because controller won't use this method. 
+    But it may prove useful in future implementations if we want to implement pagination in members list. 
+    In that case, the controller method should be changed to return a Page instead of List to avoid manual pagination with subList.
+    
     @Test
     public void testMembersPageModelAttributes() throws Exception {
         // GIVEN
@@ -367,7 +382,7 @@ public class EquipoWebTest {
                 .andExpect(content().string(not(containsString("user1@umh.es"))))
                 .andExpect(content().string(not(containsString("user10@umh.es"))));
     }
-
+    */
         @Test
         public void testJoinButtonPresence() throws Exception {
                 when(managerUserSession.usuarioLogeado()).thenReturn(1L);

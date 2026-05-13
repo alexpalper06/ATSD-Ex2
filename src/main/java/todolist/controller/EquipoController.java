@@ -62,6 +62,7 @@ public class EquipoController {
         return "listaEquipos";
     }
 
+    /*
     @GetMapping("/teams/{id}/members")
     public String listTeamMembers(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, Model model) {
         checkRegisteredUser();
@@ -70,6 +71,7 @@ public class EquipoController {
         List<UsuarioData> membersList = equipoService.usuariosEquipo(id);
 
         // Manual pagination due to the type of the method usuariosEquipo (return List not Page)
+        // Method should be changed to return a Page instead of List to avoid this manual pagination
         int totalElements = membersList.size();
         int totalPages = (totalElements == 0) ? 1 : (int) Math.ceil((double) totalElements / size);
         int fromIndex = page * size;
@@ -87,7 +89,7 @@ public class EquipoController {
 
         return "listarMiembrosEquipo";
     }
-
+    */
    
     @GetMapping("/teams/new")
     public String nuevoEquipo(Model model) {
