@@ -287,7 +287,7 @@ public class EquipoServiceTest {
         assertThat(equipoActualizado.getNombre()).isEqualTo("Proyecto Actualizado");
     }
 
-        @Test
+    @Test
     public void eliminarEquipoTest() {
         // GIVEN
         // Un equipo en la base de datos
